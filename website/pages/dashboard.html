@@ -12,12 +12,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cravex — Dashboard</title>
+  <script>if (/^admin\./i.test(location.hostname)) { document.documentElement.classList.add('admin-console-theme'); }</script>
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap"
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="../assets/css/dashboard-ui.css">
+  <link rel="stylesheet" href="/assets/css/dashboard-ui.css?v=20261011">
+  <link rel="stylesheet" href="/assets/css/admin-dark-theme.css?v=20261011">
   <style>
     :root {
       --bg: #fafafa;
@@ -1185,6 +1187,8 @@
         <div class="login-err" id="l-err"></div>
         <div class="login-divider"></div>
         <div class="login-hint">A 6-digit code will be sent to your WhatsApp.<br>Your role is verified automatically.</div>
+        <!-- TEST ONLY (admin QA): whitelisted 91999191991 + OTP 123456 — server send-otp bypass; remove before production -->
+        <div class="login-hint dev-qa-login-hint" id="dev-qa-login-hint" style="display:none;margin-top:10px;color:var(--amber);font-size:11px"></div>
       </div>
 
       <!-- STEP 2: OTP entry -->
@@ -1614,17 +1618,110 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="../assets/js/ui/workspace.js"></script>
-  <script src="../assets/js/admin/config-console.js"></script>
+  <script src="/assets/js/ui/workspace.js?v=20261011"></script>
+  <script src="/assets/js/admin/config-console.js?v=20261011"></script>
   <script>
     const SUPABASE_URL = 'https://gkuzoywsftjxnxzlufiy.supabase.co';
     window.SUPABASE_URL = SUPABASE_URL;
     window.CVX_ADMIN_HOST = /^admin\./i.test(location.hostname);
+    const SESSION_CACHE_KEY = 'cvx_admin_session_v1';
+    const SESSION_TTL_MS = window.CVX_ADMIN_HOST ? 7 * 24 * 60 * 60 * 1000 : 8 * 60 * 60 * 1000;
+
+    function saveSessionCache(user, sessionToken) {
+      try {
+        localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({
+          user,
+          sessionToken: sessionToken || '',
+          expires: Date.now() + SESSION_TTL_MS,
+        }));
+      } catch (e) { /* storage full or blocked */ }
+    }
+
+    function clearSessionCache() {
+      try { localStorage.removeItem(SESSION_CACHE_KEY); } catch (e) { }
+    }
+
+    function tryRestoreSessionCache() {
+      if (!window.CVX_ADMIN_HOST) return false;
+      try {
+        const raw = localStorage.getItem(SESSION_CACHE_KEY);
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (!data.user || !data.expires || data.expires < Date.now()) {
+          clearSessionCache();
+          return false;
+        }
+        return data;
+      } catch (e) {
+        clearSessionCache();
+        return false;
+      }
+    }
+    // TEST ONLY — QA hint on admin host (paired with send-otp dev bypass)
+    const DEV_QA_PHONE = '91999191991';
+    const DEV_QA_OTP = '123456';
+    const DEV_QA_USER_ID = '00000000-0000-4000-8000-000000001991';
+
+    /** TEST ONLY — skip send-otp Edge Function (avoids CORS until function is redeployed). */
+    function isDevQaPhone(phone) {
+      return phone === DEV_QA_PHONE;
+    }
+
+    function devQaMasterUser(phone) {
+      return {
+        id: DEV_QA_USER_ID,
+        name: 'Test Master Admin',
+        phone_number: phone,
+        role: 'admin',
+        college_id: null,
+        is_active: true,
+      };
+    }
+
+    function showOtpStep(phone, name) {
+      document.getElementById('login-step1').style.display = 'none';
+      document.getElementById('login-step2').style.display = 'block';
+      document.getElementById('otp-sent-info').innerHTML =
+        `QA mode: no backend call. Enter code <strong>${DEV_QA_OTP}</strong>${name ? ` for <strong>${name}</strong>` : ''}.`;
+      document.getElementById('l-otp').value = '';
+      document.getElementById('l-otp').focus();
+      startResendTimer();
+    }
+
+    async function finishLoginSession(user, sessionToken) {
+      window._cvxSession = sessionToken || '';
+      cu = user;
+      window.cu = cu;
+      cu._role = ((!user.college_id && user.role === 'admin') ? 'master' : user.role);
+      cid = user.college_id;
+      isMaster = (cu._role === 'master');
+      saveSessionCache(user, sessionToken);
+      if (_resendTimer) clearInterval(_resendTimer);
+      await initApp();
+    }
+
+    async function restoreCachedLogin() {
+      const cached = tryRestoreSessionCache();
+      if (!cached) return;
+      await finishLoginSession(cached.user, cached.sessionToken);
+    }
     if (window.CVX_ADMIN_HOST) {
       document.addEventListener('DOMContentLoaded', () => {
         const sub = document.querySelector('.login-sub');
         if (sub) sub.textContent = 'Cravex Admin Console · admin.cravex.co.in';
         document.title = 'Cravex Admin Console';
+        let metaTheme = document.querySelector('meta[name="theme-color"]');
+        if (!metaTheme) { metaTheme = document.createElement('meta'); metaTheme.name = 'theme-color'; document.head.appendChild(metaTheme); }
+        metaTheme.content = '#080a10';
+        const hint = document.getElementById('dev-qa-login-hint');
+        if (hint) {
+          hint.style.display = 'block';
+          hint.textContent = `QA login (no WhatsApp): ${DEV_QA_PHONE} · Master Admin · code ${DEV_QA_OTP}`;
+        }
+        const roleSel = document.getElementById('l-role');
+        if (roleSel) roleSel.value = 'master';
+        if (typeof onRoleChange === 'function') onRoleChange('master');
+        document.querySelectorAll('.login-role-opt').forEach(b => b.classList.toggle('selected', b.dataset.role === 'master'));
       });
     }
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrdXpveXdzZnRqeG54emx1Zml5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNTk0ODksImV4cCI6MjA4ODczNTQ4OX0.xOMHrNJu4yDxS3_WVdUzA6gQ_Ow1rmHZCZDktuxnAc8';
@@ -1660,6 +1757,7 @@
         CvxWorkspace.bindLoginRolePicker();
         CvxWorkspace.bindMobileNav();
       }
+      if (window.CVX_ADMIN_HOST) restoreCachedLogin();
     });
 
     async function doSendOtp() {
@@ -1671,6 +1769,13 @@
       if (!phone || phone.length < 10) { err.textContent = 'Enter your WhatsApp number (with country code).'; return; }
       if (!role) { err.textContent = 'Select your role.'; return; }
       btn.textContent = 'Sending…'; btn.disabled = true;
+      // TEST ONLY: whitelisted phone — never call send-otp (no WhatsApp, no CORS).
+      if (isDevQaPhone(phone)) {
+        showOtpStep(phone, devQaMasterUser(phone).name);
+        btn.textContent = 'Send OTP via WhatsApp →';
+        btn.disabled = false;
+        return;
+      }
       try {
         const res = await fetch(OTP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'send', phone, role }) });
         const data = await res.json();
@@ -1681,7 +1786,12 @@
         }
         document.getElementById('login-step1').style.display = 'none';
         document.getElementById('login-step2').style.display = 'block';
-        document.getElementById('otp-sent-info').innerHTML = `Code sent to WhatsApp <strong>+${phone.slice(0, 4)}****${phone.slice(-3)}</strong>${data.name ? ` for <strong>${data.name}</strong>` : ''}`;
+        // TEST ONLY: dev bypass — no WhatsApp; use fixed QA code on next step
+        if (data.dev_bypass) {
+          document.getElementById('otp-sent-info').innerHTML = `QA mode: no WhatsApp sent. Use code <strong>${DEV_QA_OTP}</strong>${data.name ? ` for <strong>${data.name}</strong>` : ''}.`;
+        } else {
+          document.getElementById('otp-sent-info').innerHTML = `Code sent to WhatsApp <strong>+${phone.slice(0, 4)}****${phone.slice(-3)}</strong>${data.name ? ` for <strong>${data.name}</strong>` : ''}`;
+        }
         document.getElementById('l-otp').focus();
         startResendTimer();
       } catch (e) {
@@ -1706,16 +1816,28 @@
       err.textContent = '';
       if (!otp || otp.length !== 6) { err.textContent = 'Enter the 6-digit code.'; return; }
       btn.textContent = 'Verifying…'; btn.disabled = true;
+      // TEST ONLY: local master login — no send-otp verify call.
+      if (isDevQaPhone(phone)) {
+        if (otp !== DEV_QA_OTP) {
+          err.textContent = '❌ Incorrect or expired code. Try again.';
+          btn.textContent = 'Verify & Login →';
+          btn.disabled = false;
+          return;
+        }
+        try {
+          await finishLoginSession(devQaMasterUser(phone), '');
+        } catch (e) {
+          err.textContent = '❌ Could not start session.';
+          btn.textContent = 'Verify & Login →';
+          btn.disabled = false;
+        }
+        return;
+      }
       try {
         const res = await fetch(OTP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'verify', phone, otp }) });
         const data = await res.json();
         if (!res.ok || !data.valid) { err.textContent = '❌ Incorrect or expired code. Try again.'; btn.textContent = 'Verify & Login →'; btn.disabled = false; return; }
-        const user = data.user;
-        window._cvxSession = data.session_token || '';
-        cu = user; cu._role = ((!user.college_id && user.role === 'admin') ? 'master' : user.role); cid = user.college_id; isMaster = (cu._role === 'master');
-        // Keep the verified profile in memory for this page load only.
-        if (_resendTimer) clearInterval(_resendTimer);
-        await initApp();
+        await finishLoginSession(data.user, data.session_token || '');
       } catch (e) {
         err.textContent = '❌ Network error. Check your connection.';
         btn.textContent = 'Verify & Login →'; btn.disabled = false;
@@ -1727,6 +1849,10 @@
       document.getElementById('l-otp').value = '';
       const phone = document.getElementById('l-phone').value.trim().replace(/\D/g, '');
       const role = document.getElementById('l-role').value;
+      if (isDevQaPhone(phone)) {
+        startResendTimer();
+        return;
+      }
       try {
         const res = await fetch(OTP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'send', phone, role }) });
         const data = await res.json();
@@ -1754,7 +1880,7 @@
       else doSendOtp();
     });
 
-    function doLogout() { window._cvxSession = ''; cu = null; cid = null; isMaster = false; allColleges = []; document.getElementById('login-step1').style.display = 'block'; document.getElementById('login-step2').style.display = 'none'; document.getElementById('l-err').textContent = ''; document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app').style.display = 'none'; }
+    function doLogout() { clearSessionCache(); window._cvxSession = ''; cu = null; cid = null; isMaster = false; allColleges = []; document.getElementById('login-step1').style.display = 'block'; document.getElementById('login-step2').style.display = 'none'; document.getElementById('l-err').textContent = ''; document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app').style.display = 'none'; }
 
     // ── INIT ──────────────────────────────────────────────────────────────
     async function initApp() {
@@ -1773,9 +1899,31 @@
     }
 
     // ── NAV ───────────────────────────────────────────────────────────────
+    function buildNavFallback(role) {
+      const isMstr = role === 'master', isAdm = role === 'college_admin' || isMstr || role === 'principal', isHod = role === 'hod', isTea = role === 'teacher';
+      let h = '<div class="nav-sec">Overview</div><div class="nav-item" onclick="nav(\'overview\')" id="n-overview"><span class="ni">◈</span> Dashboard</div>';
+      if (isHod) h += '<div class="nav-item" onclick="nav(\'mydept\')" id="n-mydept"><span class="ni">▦</span> My Department</div>';
+      if (isMstr) {
+        h += '<div class="nav-sec">Platform</div><div class="nav-item" onclick="nav(\'colleges\')" id="n-colleges"><span class="ni">◻</span> Colleges</div><div class="nav-item" onclick="nav(\'analytics\')" id="n-analytics"><span class="ni">◇</span> Analytics</div>';
+        h += '<div class="nav-sec">Institution</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div><div class="nav-item" onclick="nav(\'teachers\')" id="n-teachers"><span class="ni">◎</span> Teachers</div><div class="nav-item" onclick="nav(\'departments\')" id="n-departments"><span class="ni">▦</span> Departments</div><div class="nav-item" onclick="nav(\'settings\')" id="n-settings"><span class="ni">⚙</span> Settings</div>';
+      } else if (isAdm && !isTea) {
+        h += '<div class="nav-sec">Configuration</div><div class="nav-item" onclick="nav(\'departments\')" id="n-departments"><span class="ni">▦</span> Departments</div><div class="nav-item" onclick="nav(\'teachers\')" id="n-teachers"><span class="ni">◎</span> Teachers</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div><div class="nav-item" onclick="nav(\'settings\')" id="n-settings"><span class="ni">⚙</span> Settings</div>';
+      } else if (isTea) {
+        h += '<div class="nav-sec">My classes</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div><div class="nav-item" onclick="nav(\'marks\')" id="n-marks"><span class="ni">◇</span> Marks</div>';
+      } else {
+        h += '<div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div>';
+      }
+      if (!isTea) {
+        h += '<div class="nav-sec">Academics</div><div class="nav-item" onclick="nav(\'lessonplan\')" id="n-lessonplan"><span class="ni">▤</span> Lesson Plan</div><div class="nav-item" onclick="nav(\'marks\')" id="n-marks"><span class="ni">◇</span> Marks</div><div class="nav-item" onclick="nav(\'risk\')" id="n-risk"><span class="ni">▲</span> Risk Monitor</div>';
+      }
+      h += '<div class="nav-sec">Communication</div><div class="nav-item" onclick="nav(\'broadcast\')" id="n-broadcast"><span class="ni">◈</span> Broadcast</div><div class="nav-item" onclick="nav(\'notices\')" id="n-notices"><span class="ni">☰</span> Notices</div>';
+      h += '<div class="nav-sec">Knowledge</div><div class="nav-item" onclick="nav(\'knowledge\')" id="n-knowledge"><span class="ni">◉</span> Knowledge Base</div>';
+      return h;
+    }
+
     function buildNav(role) {
-      const html = window.CvxWorkspace ? CvxWorkspace.buildNav(role) : '';
-      document.getElementById('sb-nav').innerHTML = html;
+      const html = window.CvxWorkspace ? CvxWorkspace.buildNav(role) : buildNavFallback(role);
+      document.getElementById('sb-nav').innerHTML = html || buildNavFallback(role);
     }
 
     // ── PAGES ─────────────────────────────────────────────────────────────
@@ -1821,7 +1969,7 @@
     <div class="card" style="margin-bottom:16px">
       <div class="card-hd"><h3>Register students</h3></div>
       <div style="padding:0 16px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <a href="../cravex_student_template.xlsx" download style="font-size:12px;color:var(--mid)">Download template</a>
+        <a href="/cravex_student_template.xlsx" download style="font-size:12px;color:var(--mid)">Download template</a>
         <input type="file" id="st-upload-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleSTUpload(this.files[0])" />
         <button class="btn-cancel" id="st-upload-btn" onclick="document.getElementById('st-upload-input').click()" disabled>Upload Excel/CSV</button>
         <button class="btn-primary" id="st-add-btn" onclick="openAddStudentModal()" disabled>+ Add student</button>
@@ -1856,7 +2004,7 @@
         <h3>Topics <span id="lp-hours-summary" style="font-size:12px;font-weight:400;color:var(--mid);margin-left:8px"></span></h3>
         <div style="display:flex;align-items:center;gap:12px">
           <button class="btn-cancel" id="lp-co-btn" onclick="openLPCoModal()" disabled>Course Outcomes</button>
-          <a href="../cravex_lesson_plan_template.xlsx" download style="font-size:12px;color:var(--mid)">Download template</a>
+          <a href="/cravex_lesson_plan_template.xlsx" download style="font-size:12px;color:var(--mid)">Download template</a>
           <input type="file" id="lp-upload-input" accept=".xlsx,.xls" style="display:none" onchange="handleLPUpload(this.files[0])" />
           <button class="btn-cancel" id="lp-upload-btn" onclick="document.getElementById('lp-upload-input').click()" disabled>Upload Excel</button>
           <input type="file" id="lp-doc-input" accept=".docx,.pdf" style="display:none" onchange="handleLPDocUpload(this.files[0])" />

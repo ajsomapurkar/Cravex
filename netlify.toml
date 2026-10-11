@@ -1,18 +1,30 @@
 [build]
   publish = "website"
 
-# Admin staff console on admin.cravex.co.in (add domain alias in Netlify → Domain management)
+# Admin console: rewrite only entry routes — never /assets/* (breaks JS/CSS on admin host)
 [[redirects]]
-  from = "https://admin.cravex.co.in"
+  from = "/"
   to = "/pages/dashboard.html"
   status = 200
   force = true
+  [redirects.conditions]
+  Host = ["admin.cravex.co.in"]
 
 [[redirects]]
-  from = "https://admin.cravex.co.in/*"
+  from = "/dashboard"
   to = "/pages/dashboard.html"
   status = 200
   force = true
+  [redirects.conditions]
+  Host = ["admin.cravex.co.in"]
+
+[[redirects]]
+  from = "/app"
+  to = "/pages/dashboard.html"
+  status = 200
+  force = true
+  [redirects.conditions]
+  Host = ["admin.cravex.co.in"]
 
 [[headers]]
   for = "https://admin.cravex.co.in/*"

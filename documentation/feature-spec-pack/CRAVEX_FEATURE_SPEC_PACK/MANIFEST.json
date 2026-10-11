@@ -1,0 +1,160 @@
+{
+  "pack_version": "1.0",
+  "created": "2026-10-11",
+  "repository": "ajsomapurkar/Cravex",
+  "repository_tree_sha": "84cb3f5d9f4fd6b60e62f0f51596efa494bdd32d",
+  "supabase_project_ref": "gkuzoywsftjxnxzlufiy",
+  "feature_count": 21,
+  "documents": [
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 338,
+      "sha256": "f43c10f975bd534562f030ca678a79d2b7d15565b315b97d660c573265490776"
+    },
+    {
+      "path": "MANIFEST.json",
+      "bytes": 5447,
+      "sha256": "f5282160f12935bba42fd0c85aa7a960a56a861a1ea63c33ef7e50d5927ae248"
+    },
+    {
+      "path": "README.md",
+      "bytes": 8793,
+      "sha256": "df49648abbd9b7752940ebf6b024758f4f796d633c63c744df028066e4aee694"
+    },
+    {
+      "path": "architecture/FEATURE_SPEC_TEMPLATE.md",
+      "bytes": 1962,
+      "sha256": "a0af84a2cf6e014e5dc23ab9b9f8cf9c6f52ed8683e780fb0ab068a93af45e37"
+    },
+    {
+      "path": "architecture/MASTER_BUILD_PLAN.md",
+      "bytes": 47024,
+      "sha256": "998dbb53a85a968fb705b0029c24da6a917e96b42acfd87ac6aefec75cc5ae0c"
+    },
+    {
+      "path": "architecture/SAFE_CHANGE_ARCHITECTURE.md",
+      "bytes": 7405,
+      "sha256": "6ffb41052e96c318c672fbcc52dcefedfe40ca41b05baf1cb635662c655d12c1"
+    },
+    {
+      "path": "architecture/SUPABASE_MIGRATION_PLAYBOOK.md",
+      "bytes": 4616,
+      "sha256": "d614edee63d6567782a6904adcd63ad829d7dee990349d07950bdd7a2a1ec516"
+    },
+    {
+      "path": "audit/EXISTING_FEATURE_INVENTORY.md",
+      "bytes": 3420,
+      "sha256": "d50c0f49b2a2d5c99aace5b6ad59a61517e56047a51d17184242b40dc519eb9c"
+    },
+    {
+      "path": "audit/LIVE_REPOSITORY_SUPABASE_AUDIT.md",
+      "bytes": 6877,
+      "sha256": "917ce50519242637b2e13e9430cf24e2a4284d22f357b19c3cfc20a3a8a16619"
+    },
+    {
+      "path": "features/f01-security-authentication-and-tenant-isolation.md",
+      "bytes": 5930,
+      "sha256": "ea65c20b8098aafb1fac816f4abd3538b1fca4c2b31240c8f1fb655e219bb5d7"
+    },
+    {
+      "path": "features/f02-admin-console-and-central-configuration.md",
+      "bytes": 4710,
+      "sha256": "a33a742fcfe163f11d270918e4b9166ab8fbf77b17509e694c56f8551f9eea17"
+    },
+    {
+      "path": "features/f03-principal-dashboard-and-institutional-governance.md",
+      "bytes": 4561,
+      "sha256": "4a0101e59ef25cf0e8010a4430999be0c01ca27f83639ccb57b8dadee4522399"
+    },
+    {
+      "path": "features/f04-hod-department-operations.md",
+      "bytes": 3964,
+      "sha256": "8d572e1f20acc2d32ca37b7132f86006204b722de77f6fd0379dcdaede693bb6"
+    },
+    {
+      "path": "features/f05-teacher-dashboard-and-faculty-workspace.md",
+      "bytes": 4171,
+      "sha256": "9e735638aa321379599ccf29b0943acc2ea5e9e46d3719def2bd0dc99e6c5725"
+    },
+    {
+      "path": "features/f06-timetable-live-publishing-and-schedule-propagation.md",
+      "bytes": 4721,
+      "sha256": "870efe47560f50686d2d3f55f3fa02944eb51ba5ef37b2d8cbfd0026bb04e231"
+    },
+    {
+      "path": "features/f07-academic-calendar-schemes-and-regulations.md",
+      "bytes": 3910,
+      "sha256": "308904916853d2e72c02f9844232ae43696c38f78fb12416bbcdf0b000e362ac"
+    },
+    {
+      "path": "features/f08-student-records-enrollment-and-mentoring.md",
+      "bytes": 4060,
+      "sha256": "4d3db19061bc5034727cb73ada02f7e2935fbe4105470bab4d6e86a3a3761057"
+    },
+    {
+      "path": "features/f09-attendance-and-eligibility.md",
+      "bytes": 4048,
+      "sha256": "e02aa0b771c4e3e1d179b0e24aa24829089435b8e79523c80e4e421656c70ae8"
+    },
+    {
+      "path": "features/f10-internal-assessment-marks-and-approval-workflow.md",
+      "bytes": 4452,
+      "sha256": "9c23e635ceb22fb088cd6f304da6564c046d0a853114053cdad01029111e8146"
+    },
+    {
+      "path": "features/f11-obe-co-po-pso-and-attainment.md",
+      "bytes": 4223,
+      "sha256": "a12c7d31851e94bc937548dcf88f47d6a46a5e8f329ebb19fd4cd77919901e00"
+    },
+    {
+      "path": "features/f12-lesson-plans-syllabus-coverage-and-delivery-evidence.md",
+      "bytes": 4088,
+      "sha256": "5463c54d599f25dab9934665c70bfeee0d27fa1037652a3cefeadbaed8d6df2a"
+    },
+    {
+      "path": "features/f13-course-files-resources-ppts-and-question-papers.md",
+      "bytes": 4262,
+      "sha256": "3347932a789f3bc40d6ae5bae5ed434254bcde84a018e2f1e2c2293b0bd179a6"
+    },
+    {
+      "path": "features/f14-meetings-announcements-callouts-and-notifications.md",
+      "bytes": 4169,
+      "sha256": "cf1aaca69ab257229a1cfc5d3cf74ce602dd0551ae414d2fc14fb77b0ec79d00"
+    },
+    {
+      "path": "features/f15-google-classroom-integration-and-content-linking.md",
+      "bytes": 4000,
+      "sha256": "300114908e0c52f481f959f8baa824342f56db376cc6aef2e92078bf5e0a5366"
+    },
+    {
+      "path": "features/f16-gemini-ai-chatbot-reliability-and-cost-controls.md",
+      "bytes": 4808,
+      "sha256": "e31d685d5c9eb0399913fd6d091c7e7899c8f26e4bb42035d4995fbc5f6189fb"
+    },
+    {
+      "path": "features/f17-iqac-evidence-packs-and-academic-audits.md",
+      "bytes": 4109,
+      "sha256": "62324fc6560d22286663ad363c2b847cd6c08d641f16be0f64d53d95f69c4ad5"
+    },
+    {
+      "path": "features/f18-analytics-reports-and-exports.md",
+      "bytes": 3910,
+      "sha256": "4e3fd3edbd1cdb3026d092117c58246a6149b5c5142ec1224372d5b9d4a64c5d"
+    },
+    {
+      "path": "features/f19-laboratories-practical-batches-and-resource-scheduling.md",
+      "bytes": 3440,
+      "sha256": "2229dde5393bfa5b54722479c79dd88f54f5efc39cf64d3068eba9e1887aa975"
+    },
+    {
+      "path": "features/f20-supabase-migrations-release-engineering-and-change-safety.md",
+      "bytes": 4827,
+      "sha256": "ed02eb55f987da67d3fe010e82d908034e54147d34ee8b9f1b86654458ba8b6a"
+    },
+    {
+      "path": "features/f21-testing-observability-backups-and-operations.md",
+      "bytes": 4409,
+      "sha256": "419b98b261fbe6be99e2ed1aacf9403b79ee4737e228c6de20700a5bc6c2e641"
+    }
+  ]
+}

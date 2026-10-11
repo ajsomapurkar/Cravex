@@ -8,6 +8,7 @@ This package restores the dashboard's existing Supabase connection from `Cravex_
 - `website/pages/dashboard.html` — the cleaned dashboard implementation with the handoff's existing public Supabase project configuration restored. It calls the existing `send-otp` Edge Function. The old DevTools telemetry/context-menu blocking and browser-local authorization restoration were **not** copied back in.
 - `supabase/` — backend/schema source kept outside the public publish folder.
 - `documentation/` and `templates/` — the handoff manuals, audit notes, and spreadsheet templates.
+- **Feature roadmap (F01–F21):** [CRAVEX Feature Spec Pack](documentation/feature-spec-pack/CRAVEX_FEATURE_SPEC_PACK/README.md) and [implementation tracker](documentation/FEATURE_IMPLEMENTATION_TRACKER.md).
 - `netlify.toml` — tells a Git-connected Netlify site to publish only `website/`.
 
 ## Connection status

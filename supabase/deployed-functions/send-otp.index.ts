@@ -17,6 +17,30 @@ const ALLOWED_ORIGINS = new Set([
 const NETLIFY_SITE_ORIGIN = /^https:\/\/(?:[a-z0-9-]+--)?cravexcoin\.netlify\.app$/;
 const isAllowedOrigin = (origin: string) => ALLOWED_ORIGINS.has(origin) || NETLIFY_SITE_ORIGIN.test(origin);
 
+// ── TEST ONLY — QA bypass for admin.cravex.co.in (do NOT use with real student data) ──
+// Whitelisted phone: skip WhatsApp OTP; verify with fixed code 123456; session = master admin.
+// Remove or gate with env (e.g. DEV_OTP_BYPASS=false) before production pilot.
+const DEV_OTP_BYPASS_PHONE = "91999191991";
+const DEV_OTP_BYPASS_CODE = "123456";
+const DEV_OTP_BYPASS_USER_ID = "00000000-0000-4000-8000-000000001991";
+
+function isDevOtpBypassPhone(phone: string): boolean {
+  return phone === DEV_OTP_BYPASS_PHONE;
+}
+
+/** Synthetic master profile when no DB row exists for the test phone. */
+function devMasterUser(phone: string, fromDb: Record<string, unknown> | null) {
+  if (fromDb) return fromDb;
+  return {
+    id: DEV_OTP_BYPASS_USER_ID,
+    name: "Test Master Admin",
+    phone_number: phone,
+    role: "admin",
+    college_id: null,
+    is_active: true,
+  };
+}
+
 // Phone ID is an identifier, not an access credential; keep a compatibility fallback
 // while deployments migrate to the environment variable.
 const PHONE_ID = Deno.env.get("PHONE_ID") ?? "1036694682867415";
@@ -66,8 +90,17 @@ Deno.serve(async (req) => {
 
   // ── MODE 1: SEND OTP ─────────────────────────────────────────────────
   if (body.action === "send") {
-    if (!PHONE_ID) return res({ error: "configuration_error" }, 503);
     const role = body.role ?? "";
+
+    // TEST ONLY: whitelisted phone — no WhatsApp message, no auth_otps row (use 123456 on verify).
+    if (isDevOtpBypassPhone(phone)) {
+      const { data: dbUser } = await d.from("users").select("id, name, role, college_id").eq("phone_number", phone).maybeSingle();
+      const user = devMasterUser(phone, dbUser);
+      console.log(`DEV OTP bypass send (no WhatsApp) ${phone.slice(0, 6)}****`);
+      return res({ sent: true, name: user.name, dev_bypass: true });
+    }
+
+    if (!PHONE_ID) return res({ error: "configuration_error" }, 503);
 
     // Verify user exists with matching role
     const { data: user } = await d.from("users")
@@ -132,6 +165,25 @@ Deno.serve(async (req) => {
   if (body.action === "verify") {
     const otp = (body.otp ?? "").toString().trim();
     if (!otp || !/^\d{6}$/.test(otp)) return res({ error: "Invalid OTP format" }, 400);
+
+    // TEST ONLY: whitelisted phone + fixed OTP → master admin session (skips auth_otps + WhatsApp).
+    if (isDevOtpBypassPhone(phone)) {
+      if (otp !== DEV_OTP_BYPASS_CODE) {
+        return res({ valid: false, error: "invalid_or_expired" }, 401);
+      }
+      if (!SESSION_SIGNING_SECRET) return res({ valid: false, error: "configuration_error" }, 503);
+      const { data: dbUser } = await d.from("users").select("*").eq("phone_number", phone).maybeSingle();
+      const user = devMasterUser(phone, dbUser);
+      const session_token = await signSession({
+        sub: user.id,
+        role: "master",
+        college_id: user.college_id ?? null,
+        exp: Math.floor(Date.now() / 1000) + 8 * 60 * 60,
+      }, SESSION_SIGNING_SECRET);
+      console.log(`DEV OTP bypass verify (master) ${phone.slice(0, 6)}****`);
+      return res({ valid: true, user, session_token });
+    }
+
     if (!await rateLimit("otp_verify:" + phone, 8, 10 * 60 * 1000)) return res({ valid: false, error: "rate_limited" }, 429);
 
     const now = new Date().toISOString();
