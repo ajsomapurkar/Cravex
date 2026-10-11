@@ -17,6 +17,7 @@
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="../assets/css/dashboard-ui.css">
   <style>
     :root {
       --bg: #fafafa;
@@ -1158,22 +1159,25 @@
           </svg></div>
         <h1>Cravex</h1>
       </div>
-      <div class="login-sub">Administration Portal</div>
+      <div class="login-sub">Staff portal · role-based workspaces</div>
 
       <!-- STEP 1: Phone + Role -->
       <div id="login-step1">
         <div class="field"><label>Phone Number</label><input type="tel" id="l-phone" placeholder="e.g. 919876543210" /></div>
-        <div class="field">
-          <label>Login As</label>
-          <select id="l-role" onchange="onRoleChange(this.value)">
+        <div class="field field-login-role">
+          <label>Sign in as</label>
+          <select id="l-role" onchange="onRoleChange(this.value)" aria-hidden="true" tabindex="-1">
             <option value="">Select your role</option>
             <option value="master">Master Admin</option>
             <option value="college_admin">College Admin</option>
+            <option value="principal">Principal</option>
             <option value="hod">HOD</option>
             <option value="teacher">Teacher</option>
           </select>
+          <div class="login-role-grid" id="login-role-grid"></div>
           <div class="role-hint rh-master" id="rh-master">Full platform access — all colleges, system analytics, add college admins.</div>
           <div class="role-hint rh-college_admin" id="rh-college_admin">College-level access — students, teachers, broadcasts, knowledge base.</div>
+          <div class="role-hint rh-principal" id="rh-principal">Institution oversight — settings, academic risk, marks review, and announcements.</div>
           <div class="role-hint rh-hod" id="rh-hod">Department-level access — your department's teachers, subjects and lesson plans.</div>
           <div class="role-hint rh-teacher" id="rh-teacher">Teacher access — attendance, marks, PDF uploads, broadcast, risk reports.</div>
         </div>
@@ -1199,7 +1203,8 @@
   </div>
 
   <!-- APP -->
-  <div id="app">
+  <div id="app" data-role="">
+    <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
     <aside class="sidebar">
       <div class="sb-logo">
         <div class="sb-logo-mark"><svg viewBox="0 0 14 14">
@@ -1207,6 +1212,7 @@
           </svg></div>
         <span class="sb-wordmark">Cravex</span>
       </div>
+      <div class="sb-workspace" id="sb-workspace"></div>
       <nav class="sb-nav" id="sb-nav"></nav>
       <div class="sb-footer">
         <div class="user-row">
@@ -1219,7 +1225,13 @@
         </div>
       </div>
     </aside>
-    <main class="main" id="main-content"></main>
+    <main class="main" id="main-content">
+      <div class="mobile-topbar" id="mobile-topbar">
+        <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu">☰</button>
+        <span class="mobile-topbar-title" id="mobile-page-title">Cravex</span>
+        <span style="width:40px"></span>
+      </div>
+    </main>
   </div>
 
   <!-- MODALS -->
@@ -1602,8 +1614,19 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="../assets/js/ui/workspace.js"></script>
+  <script src="../assets/js/admin/config-console.js"></script>
   <script>
     const SUPABASE_URL = 'https://gkuzoywsftjxnxzlufiy.supabase.co';
+    window.SUPABASE_URL = SUPABASE_URL;
+    window.CVX_ADMIN_HOST = /^admin\./i.test(location.hostname);
+    if (window.CVX_ADMIN_HOST) {
+      document.addEventListener('DOMContentLoaded', () => {
+        const sub = document.querySelector('.login-sub');
+        if (sub) sub.textContent = 'Cravex Admin Console · admin.cravex.co.in';
+        document.title = 'Cravex Admin Console';
+      });
+    }
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrdXpveXdzZnRqeG54emx1Zml5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNTk0ODksImV4cCI6MjA4ODczNTQ4OX0.xOMHrNJu4yDxS3_WVdUzA6gQ_Ow1rmHZCZDktuxnAc8';
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1625,11 +1648,19 @@
     let _resendTimer = null;
 
     function onRoleChange(v) {
-      ['master', 'college_admin', 'hod', 'teacher'].forEach(r => {
+      ['master', 'college_admin', 'principal', 'hod', 'teacher'].forEach(r => {
         const el = document.getElementById('rh-' + r);
         if (el) el.style.display = (r === v ? 'block' : 'none');
       });
+      document.querySelectorAll('.login-role-opt').forEach(b => b.classList.toggle('selected', b.dataset.role === v));
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.CvxWorkspace) {
+        CvxWorkspace.bindLoginRolePicker();
+        CvxWorkspace.bindMobileNav();
+      }
+    });
 
     async function doSendOtp() {
       const phone = document.getElementById('l-phone').value.trim().replace(/\D/g, '');
@@ -1732,63 +1763,48 @@
       const name = cu.name || 'User';
       document.getElementById('u-name').textContent = name;
       document.getElementById('u-av').textContent = name[0].toUpperCase();
-      document.getElementById('u-role-tag').textContent = { master: 'Master Admin', college_admin: 'College Admin', hod: 'HOD', teacher: 'Teacher' }[cu._role] || cu._role;
+      document.getElementById('u-role-tag').textContent = { master: 'Master Admin', college_admin: 'College Admin', principal: 'Principal', hod: 'HOD', teacher: 'Teacher' }[cu._role] || cu._role;
       if (isMaster) { const { data } = await db.from('colleges').select('id,name').order('name'); allColleges = data || []; if (!cid && allColleges.length) cid = allColleges[0].id; }
+      if (window.CvxWorkspace) CvxWorkspace.applyShell(cu._role);
       buildNav(cu._role);
       buildPages(cu._role);
+      if (window.CvxWorkspace) CvxWorkspace.bindMobileNav();
       nav(cu._role === 'hod' ? 'mydept' : 'overview');
     }
 
     // ── NAV ───────────────────────────────────────────────────────────────
     function buildNav(role) {
-      const isAdm = role === 'college_admin' || role === 'master', isMstr = role === 'master', isHod = role === 'hod';
-      document.getElementById('sb-nav').innerHTML = `
-    <div class="nav-sec">Overview</div>
-    <div class="nav-item" onclick="nav('overview')" id="n-overview"><span class="ni">◈</span> Dashboard</div>
-    ${isHod ? `<div class="nav-item" onclick="nav('mydept')" id="n-mydept"><span class="ni">◎</span> My Department</div>` : ''}
-    <div class="nav-sec">People</div>
-    <div class="nav-item" onclick="nav('students')" id="n-students"><span class="ni">◉</span> Students</div>
-    <div class="nav-item" onclick="nav('sessions')" id="n-sessions"><span class="ni">◉</span> Sessions</div>
-    ${isAdm ? `<div class="nav-item" onclick="nav('teachers')" id="n-teachers"><span class="ni">◎</span> Teachers</div>` : ''}
-    ${isAdm ? `<div class="nav-item" onclick="nav('departments')" id="n-departments"><span class="ni">▦</span> Departments</div>` : ''}
-    ${isMstr ? `<div class="nav-item" onclick="nav('colleges')" id="n-colleges"><span class="ni">◻</span> Colleges</div>` : ''}
-    <div class="nav-sec">Academics</div>
-    <div class="nav-item" onclick="nav('lessonplan')" id="n-lessonplan"><span class="ni">▤</span> Lesson Plan</div>
-    <div class="nav-item" onclick="nav('risk')" id="n-risk"><span class="ni">▲</span> Risk Monitor</div>
-    <div class="nav-item" onclick="nav('marks')" id="n-marks"><span class="ni">◇</span> Marks</div>
-    <div class="nav-sec">Communication</div>
-    <div class="nav-item" onclick="nav('broadcast')" id="n-broadcast"><span class="ni">◈</span> Broadcast</div>
-    <div class="nav-item" onclick="nav('notices')" id="n-notices"><span class="ni">☰</span> Notices</div>
-    <div class="nav-sec">Knowledge</div>
-    <div class="nav-item" onclick="nav('knowledge')" id="n-knowledge"><span class="ni">◉</span> Knowledge Base</div>
-    <div class="nav-sec">Analytics</div>
-    <div class="nav-item" onclick="nav('analytics')" id="n-analytics"><span class="ni">◇</span> Analytics</div>`;
+      const html = window.CvxWorkspace ? CvxWorkspace.buildNav(role) : '';
+      document.getElementById('sb-nav').innerHTML = html;
     }
 
     // ── PAGES ─────────────────────────────────────────────────────────────
     function buildPages(role) {
-      const isMstr = role === 'master', isAdm = role === 'college_admin' || role === 'master', isHod = role === 'hod', isTea = role === 'teacher';
-      const rbCls = { master: 'rb-master', college_admin: 'rb-college_admin', hod: 'rb-hod', teacher: 'rb-teacher' }[role] || 'rb-college_admin';
-      const rbLbl = { master: 'Master Admin', college_admin: 'College Admin', hod: 'HOD', teacher: 'Teacher' }[role] || role;
+      const isMstr = role === 'master', isAdm = role === 'college_admin' || role === 'master' || role === 'principal', isHod = role === 'hod', isTea = role === 'teacher', isCfg = isAdm;
+      const rbCls = { master: 'rb-master', college_admin: 'rb-college_admin', principal: 'rb-principal', hod: 'rb-hod', teacher: 'rb-teacher' }[role] || 'rb-college_admin';
+      const rbLbl = { master: 'Master Admin', college_admin: 'College Admin', principal: 'Principal', hod: 'HOD', teacher: 'Teacher' }[role] || role;
       const colBar = isMstr ? `<div class="col-select-bar"><label>College</label><select id="col-sel" onchange="onColChange(this.value)">${allColleges.map(c => `<option value="${c.id}"${c.id === cid ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>` : '';
+      const overviewShell = window.CvxWorkspace
+        ? CvxWorkspace.buildOverviewHeader(role, rbCls, rbLbl, colBar)
+        : `<div class="role-badge ${rbCls}">${rbLbl}</div>${colBar}<div class="page-hd"><div><h2>Dashboard</h2><p>Welcome back. Here's what's happening.</p></div></div>`;
+      const mobileBar = document.getElementById('mobile-topbar');
+      const mobileBarHtml = mobileBar ? mobileBar.outerHTML : '';
 
-      document.getElementById('main-content').innerHTML = `
+      document.getElementById('main-content').innerHTML = mobileBarHtml + `
   <!-- OVERVIEW -->
   <div class="page" id="p-overview">
-    <div class="role-badge ${rbCls}">${rbLbl}</div>
-    ${colBar}
-    <div class="page-hd"><div><h2>Dashboard</h2><p>Welcome back. Here's what's happening.</p></div></div>
+    ${overviewShell}
     <div class="stats-row">
       <div class="stat"><div class="stat-lbl">Students</div><div class="stat-val" id="s-stu">—</div><div class="stat-sub">Registered</div></div>
-      <div class="stat"><div class="stat-lbl">Teachers</div><div class="stat-val" id="s-tea">—</div><div class="stat-sub">Active</div></div>
+      <div class="stat"><div class="stat-lbl">${isHod ? 'Faculty' : 'Teachers'}</div><div class="stat-val" id="s-tea">—</div><div class="stat-sub">${isHod ? 'In college' : 'Active'}</div></div>
       <div class="stat"><div class="stat-lbl">Messages</div><div class="stat-val" id="s-msg">—</div><div class="stat-sub">Processed</div></div>
-      <div class="stat"><div class="stat-lbl">At Risk</div><div class="stat-val" id="s-risk">—</div><div class="stat-sub">Below 75%</div></div>
+      <div class="stat"><div class="stat-lbl">At risk</div><div class="stat-val" id="s-risk">—</div><div class="stat-sub">Below 75% attendance</div></div>
     </div>
     <div class="two-col">
-      <div class="card"><div class="card-hd"><h3>Recent Announcements</h3></div><div id="o-anns">${ld()}</div></div>
-      <div class="card"><div class="card-hd"><h3>Low Attendance Alerts</h3></div><div id="o-low">${ld()}</div></div>
+      <div class="card"><div class="card-hd"><h3>${isTea ? 'Recent notices' : 'Recent announcements'}</h3></div><div id="o-anns">${ld()}</div></div>
+      <div class="card"><div class="card-hd"><h3>${isTea ? 'Attendance alerts' : 'Low attendance alerts'}</h3></div><div id="o-low">${ld()}</div></div>
     </div>
-    <div class="card"><div class="card-hd"><h3>Top Risk Students</h3><a href="#" onclick="nav('risk')" style="font-size:12px;color:var(--mid);text-decoration:none">View all →</a></div><div id="o-risk-prev">${ld()}</div></div>
+    <div class="card"><div class="card-hd"><h3>${isHod ? 'Department risk spotlight' : 'Top risk students'}</h3><a href="#" onclick="nav('risk');return false" style="font-size:12px;color:var(--mid);text-decoration:none">View all →</a></div><div id="o-risk-prev">${ld()}</div></div>
   </div>
 
   <!-- STUDENTS -->
@@ -1870,13 +1886,13 @@
 
   <!-- TEACHERS -->
   ${isAdm ? `<div class="page" id="p-teachers">
-    <div class="page-hd"><div><h2>Teachers</h2><p>Manage teacher accounts for this college.</p></div><button class="btn-primary" onclick="openM('m-add-teacher')">+ Add teacher</button></div>
+    <div class="page-hd"><div><h2>Teachers</h2><p>Faculty accounts, assignments, and contact details for this institution.</p></div><button class="btn-primary" onclick="openM('m-add-teacher')">+ Add teacher</button></div>
     <div class="card"><div class="card-hd"><h3>Teacher list</h3></div><div id="tea-wrap">${ld()}</div></div>
   </div>`: ''}
 
   <!-- DEPARTMENTS (PHASE 2B.5, College Admin / Master) -->
   ${isAdm ? `<div class="page" id="p-departments">
-    <div class="page-hd"><div><h2>Departments</h2><p>Departments, HODs, and department-level teachers/subjects for this college.</p></div><button class="btn-primary" onclick="openAddDepartmentModal()">+ Add Department</button></div>
+    <div class="page-hd"><div><h2>Departments</h2><p>Organize branches, assign HODs, and manage department-scoped faculty and subjects.</p></div><button class="btn-primary" onclick="openAddDepartmentModal()">+ Add Department</button></div>
     <div id="dept-wrap">${ld()}</div>
   </div>`: ''}
 
@@ -1959,6 +1975,11 @@
     <div class="card"><div class="card-hd"><h3>Uploaded documents</h3><span id="kb-count" style="font-size:12px;color:var(--mid)"></span></div><div id="kb-table">${ld()}</div></div>
   </div>
 
+  ${isCfg ? `<div class="page" id="p-settings">
+    <div class="page-hd"><div><h2>Institution settings</h2><p>Versioned configuration with publish workflow and audit history (Admin Console).</p></div></div>
+    <div id="settings-wrap">${ld()}</div>
+  </div>` : ''}
+
   <!-- ANALYTICS -->
   <div class="page" id="p-analytics">
     <div class="page-hd"><div><h2>Analytics</h2><p>Bot usage and response cache statistics.</p></div></div>
@@ -1971,7 +1992,12 @@
     }
 
     // ── NAVIGATION ────────────────────────────────────────────────────────
-    const loaders = { overview: loadOverview, students: loadStudents, teachers: loadTeachers, departments: loadDepartments, mydept: loadHodDept, colleges: loadColleges, risk: loadRisk, marks: loadMarks, sessions: loadSessions, broadcast: loadBroadcast, notices: loadNotices, knowledge: loadKnowledge, analytics: loadAnalytics, lessonplan: loadLessonPlan };
+    const loaders = { overview: loadOverview, students: loadStudents, teachers: loadTeachers, departments: loadDepartments, mydept: loadHodDept, colleges: loadColleges, risk: loadRisk, marks: loadMarks, sessions: loadSessions, broadcast: loadBroadcast, notices: loadNotices, knowledge: loadKnowledge, analytics: loadAnalytics, lessonplan: loadLessonPlan, settings: loadSettings };
+    async function loadSettings() {
+      if (!cid) { const { data: fc } = await db.from('colleges').select('id').order('name').limit(1).maybeSingle(); if (fc) cid = fc.id; }
+      if (!cid) { document.getElementById('settings-wrap').innerHTML = empty('', 'No college selected'); return; }
+      if (window.CvxAdminConfig) CvxAdminConfig.loadSettingsPage(cid);
+    }
     function nav(name) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1979,6 +2005,9 @@
       const ni = document.getElementById('n-' + name);
       if (pg) pg.classList.add('active');
       if (ni) ni.classList.add('active');
+      const titles = { overview: 'Dashboard', students: 'Students', teachers: 'Teachers', departments: 'Departments', mydept: 'My Department', colleges: 'Colleges', lessonplan: 'Lesson Plan', marks: 'Marks', risk: 'Risk Monitor', sessions: 'Sessions', broadcast: 'Broadcast', notices: 'Notices', knowledge: 'Knowledge Base', analytics: 'Analytics', settings: 'Settings' };
+      const mt = document.getElementById('mobile-page-title');
+      if (mt) mt.textContent = titles[name] || 'Cravex';
       if (loaders[name]) loaders[name]();
     }
     async function onColChange(v) { cid = v || null; const a = document.querySelector('.nav-item.active'); if (a) a.click(); }
@@ -3747,7 +3776,7 @@
         const activeNav = document.querySelector('.nav-item.active');
         const currentPage = activeNav ? activeNav.textContent.trim() : 'Dashboard overview';
         // College name from dropdown or title
-        const collegeEl = document.getElementById('col-select');
+        const collegeEl = document.getElementById('col-sel');
         const collegeName = collegeEl ? (collegeEl.options[collegeEl.selectedIndex]?.text || 'your college') : 'your college';
         return { role, name, currentPage, collegeName };
       } catch(e) { return { role: 'staff', name: 'there', currentPage: 'Dashboard', collegeName: 'your college' }; }

@@ -6,14 +6,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 // Allowed browser origins: production domains, optional DASHBOARD_ORIGINS env (comma-separated),
-// and this site's own Netlify URL + its deploy previews (<hash>--chic-malasada-a53c0d.netlify.app).
+// and this site's own Netlify URL + its deploy previews (<hash>--cravexcoin.netlify.app).
 // Not a blanket *.netlify.app wildcard.
 const ALLOWED_ORIGINS = new Set([
   "https://cravex.co.in",
   "https://www.cravex.co.in",
+  "https://admin.cravex.co.in",
   ...(Deno.env.get("DASHBOARD_ORIGINS") ?? "").split(",").map((o) => o.trim()).filter(Boolean),
 ]);
-const NETLIFY_SITE_ORIGIN = /^https:\/\/(?:[a-z0-9-]+--)?chic-malasada-a53c0d\.netlify\.app$/;
+const NETLIFY_SITE_ORIGIN = /^https:\/\/(?:[a-z0-9-]+--)?cravexcoin\.netlify\.app$/;
 const isAllowedOrigin = (origin: string) => ALLOWED_ORIGINS.has(origin) || NETLIFY_SITE_ORIGIN.test(origin);
 
 // Phone ID is an identifier, not an access credential; keep a compatibility fallback

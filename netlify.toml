@@ -1,2 +1,20 @@
 [build]
   publish = "website"
+
+# Admin staff console on admin.cravex.co.in (add domain alias in Netlify → Domain management)
+[[redirects]]
+  from = "https://admin.cravex.co.in"
+  to = "/pages/dashboard.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://admin.cravex.co.in/*"
+  to = "/pages/dashboard.html"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "https://admin.cravex.co.in/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

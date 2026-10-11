@@ -42,6 +42,7 @@ const ROLE_LABEL: Record<string, string> = {
   teacher: "teacher",
   hod: "hod",
   college_admin: "college_admin",
+  principal: "college_admin",
   master: "college_admin", // master behaves like an admin for this widget's purposes
 };
 

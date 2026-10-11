@@ -10,6 +10,10 @@
 /dashboard
   Cache-Control: no-store
 
+https://admin.cravex.co.in/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+
 /privacy.html
   Cache-Control: public, max-age=3600
 

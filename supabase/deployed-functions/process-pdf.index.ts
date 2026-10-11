@@ -95,7 +95,10 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } }
   );
   const session = await verifySession(provided, sessionSecret, d);
-  if (!session || !["master", "admin", "hod", "teacher"].includes(session.user.role)) {
+  const allowedRoles = ["master", "admin", "college_admin", "principal", "hod", "teacher"];
+  const roleOk = allowedRoles.includes(session?.user.role ?? "") ||
+    (!session?.user.college_id && session?.user.role === "admin");
+  if (!session || !roleOk) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json", ...Object.fromEntries(corsHeaders(req)) },
