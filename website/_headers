@@ -1,0 +1,17 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/pages/dashboard.html
+  Cache-Control: no-store
+
+/dashboard
+  Cache-Control: no-store
+
+/privacy.html
+  Cache-Control: public, max-age=3600
+
+/terms.html
+  Cache-Control: public, max-age=3600
