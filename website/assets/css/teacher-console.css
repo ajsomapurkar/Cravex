@@ -1,0 +1,91 @@
+/**
+ * F05 — Teacher Faculty Workspace (dark)
+ * Active with html.teacher-console-theme
+ */
+
+html.teacher-console-theme {
+  --tea-accent: #fbbf24;
+  --tea-accent-soft: rgba(251, 191, 36, 0.12);
+  --tea-accent-border: rgba(251, 191, 36, 0.35);
+}
+
+html.teacher-console-theme body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(180, 83, 9, 0.18), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(251, 191, 36, 0.06), transparent);
+}
+
+html.teacher-console-theme .nav-item.active {
+  background: linear-gradient(135deg, #b45309, #d97706);
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
+}
+
+html.teacher-console-theme .btn-login,
+html.teacher-console-theme .btn-primary {
+  background: linear-gradient(135deg, #b45309, #d97706);
+}
+
+html.teacher-console-theme .btn-login:hover,
+html.teacher-console-theme .btn-primary:hover {
+  background: linear-gradient(135deg, #d97706, #fbbf24);
+}
+
+html.teacher-console-theme .workspace-hero {
+  border-left-color: #d97706;
+}
+
+html.teacher-console-theme .user-av {
+  background: linear-gradient(135deg, #b45309, #d97706);
+  box-shadow: 0 0 0 2px #0e1118, 0 0 0 3px #d97706;
+}
+
+html.teacher-console-theme .rb-teacher {
+  background: var(--tea-accent-soft);
+  color: #fcd34d;
+  border-color: var(--tea-accent-border);
+}
+
+html.teacher-console-theme .pill-status {
+  background: var(--tea-accent-soft);
+  border-color: var(--tea-accent-border);
+  color: #fcd34d;
+}
+
+html.teacher-console-theme #app[data-role="teacher"] {
+  --accent: #fbbf24;
+  --accent-soft: rgba(251, 191, 36, 0.12);
+  --accent-border: rgba(251, 191, 36, 0.35);
+  --accent-muted: #fcd34d;
+}
+
+.teacher-module-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  font-size: 12px;
+  color: var(--mid);
+}
+
+.teacher-module-banner strong {
+  color: #fcd34d;
+  font-weight: 500;
+}
+
+.class-card {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.class-card:last-child {
+  border-bottom: none;
+}

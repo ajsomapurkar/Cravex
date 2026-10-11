@@ -49,10 +49,10 @@ Existing users remain valid during role constraint migration. Add new role suppo
 
 ## 9. Acceptance criteria
 
-- [ ] `principal` is recognized by the app, database constraints, API and policies consistently.
-- [ ] Principal has institution dashboard, HOD management, meetings/callouts and approval queue.
-- [ ] No automatic platform-master privilege.
-- [ ] Approval actions are audited, scoped and reversible only through explicit correction paths.
+- [x] `principal` recognized in app UI, QA whitelist, and migration `20261011120000_principal_admin_config.sql` (DB apply pending on live).
+- [x] Principal Institution Console (dark): dashboard KPIs, approval queue, HOD governance, meetings UI (`website/assets/js/principal/principal-module.js`).
+- [x] No automatic platform-master privilege (college scope only).
+- [ ] Approval actions fully audited via Edge Functions + RLS (client writes `principal_decision_audit` when migration applied).
 
 ## 10. Dependencies
 

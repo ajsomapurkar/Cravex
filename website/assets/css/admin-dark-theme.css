@@ -1,9 +1,13 @@
 /**
- * Cravex Admin Console — dark theme (admin.cravex.co.in only)
- * Activated via html.admin-console-theme
+ * Cravex dark console themes — admin host & Principal (F03)
+ * Activated via html.admin-console-theme or html.principal-console-theme
  */
 
-html.admin-console-theme {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme {
   --bg: #080a10;
   --white: #12151c;
   --black: #eef0f6;
@@ -25,255 +29,511 @@ html.admin-console-theme {
   color-scheme: dark;
 }
 
-html.admin-console-theme body {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme body {
   background: var(--bg);
   background-image:
     radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124, 58, 237, 0.15), transparent),
     radial-gradient(ellipse 60% 40% at 100% 0%, rgba(96, 165, 250, 0.08), transparent);
 }
 
-html.admin-console-theme #login-screen {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme #login-screen {
   background: transparent;
 }
 
-html.admin-console-theme .login-wrap {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .login-wrap {
   background: rgba(18, 21, 28, 0.92);
   border: 1px solid var(--border);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(12px);
 }
 
-html.admin-console-theme .login-logo-mark {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .login-logo-mark {
   background: linear-gradient(135deg, #7c3aed, #4f46e5);
 }
 
-html.admin-console-theme .login-logo-mark svg {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .login-logo-mark svg {
   fill: #fff;
 }
 
-html.admin-console-theme .login-sub {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .login-sub {
   color: var(--mid);
 }
 
-html.admin-console-theme .field input,
-html.admin-console-theme .field select,
-html.admin-console-theme .otp-input,
-html.admin-console-theme textarea,
-html.admin-console-theme .search-input {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .field input,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .field select,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .otp-input,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme textarea,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .search-input {
   background: #0d1017;
   border-color: var(--border);
   color: var(--black);
 }
 
-html.admin-console-theme .field input:focus,
-html.admin-console-theme .field select:focus,
-html.admin-console-theme .otp-input:focus,
-html.admin-console-theme textarea:focus,
-html.admin-console-theme .search-input:focus {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .field input:focus,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .field select:focus,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .otp-input:focus,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme textarea:focus,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .search-input:focus {
   border-color: rgba(124, 58, 237, 0.55);
 }
 
-html.admin-console-theme .btn-login {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .btn-login {
   background: linear-gradient(135deg, #7c3aed, #6366f1);
   color: #fff;
 }
 
-html.admin-console-theme .btn-login:hover {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .btn-login:hover {
   background: linear-gradient(135deg, #8b5cf6, #818cf8);
 }
 
-html.admin-console-theme .login-role-opt {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .login-role-opt {
   background: #0d1017;
   border-color: var(--border);
 }
 
-html.admin-console-theme .login-role-opt:hover {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .login-role-opt:hover {
   background: var(--surface);
   border-color: var(--border2);
 }
 
-html.admin-console-theme .login-role-opt.selected {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .login-role-opt.selected {
   border-color: #7c3aed;
   background: rgba(124, 58, 237, 0.12);
 }
 
-html.admin-console-theme .rh-master {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .rh-master {
   background: rgba(124, 58, 237, 0.12);
   border-color: rgba(124, 58, 237, 0.35);
   color: #c4b5fd;
 }
 
-html.admin-console-theme .otp-sent-info {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .otp-sent-info {
   background: rgba(34, 197, 94, 0.1);
   border-color: rgba(34, 197, 94, 0.25);
   color: #86efac;
 }
 
-html.admin-console-theme .sidebar {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .sidebar {
   background: #0e1118;
   border-right: 1px solid var(--border);
 }
 
-html.admin-console-theme .sb-logo {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .sb-logo {
   border-bottom-color: var(--border);
 }
 
-html.admin-console-theme .sb-wordmark {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .sb-wordmark {
   color: var(--black);
 }
 
-html.admin-console-theme .sb-workspace-title {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .sb-workspace-title {
   color: var(--black);
 }
 
-html.admin-console-theme .nav-item {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .nav-item {
   color: var(--mid);
   border-radius: 10px;
   margin-bottom: 2px;
 }
 
-html.admin-console-theme .nav-item:hover {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .nav-item:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--black);
 }
 
-html.admin-console-theme .nav-item.active {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .nav-item.active {
   background: linear-gradient(135deg, #7c3aed, #6366f1);
   color: #fff;
   box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
 }
 
-html.admin-console-theme .nav-item.active:hover {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .nav-item.active:hover {
   color: #fff;
 }
 
-html.admin-console-theme .sb-footer {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .sb-footer {
   border-top-color: var(--border);
 }
 
-html.admin-console-theme .user-av {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .user-av {
   background: linear-gradient(135deg, #7c3aed, #4f46e5);
   box-shadow: 0 0 0 2px #0e1118, 0 0 0 3px #7c3aed;
 }
 
-html.admin-console-theme .main {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .main {
   padding: 28px 40px 48px;
 }
 
-html.admin-console-theme .stat,
-html.admin-console-theme .card,
-html.admin-console-theme .workspace-hero,
-html.admin-console-theme .qa-card,
-html.admin-console-theme .col-select-bar,
-html.admin-console-theme .modal {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .stat,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .card,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .workspace-hero,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .qa-card,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .col-select-bar,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .modal {
   background: var(--white);
   border-color: var(--border);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-html.admin-console-theme .workspace-hero {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .workspace-hero {
   border-left-color: #7c3aed;
 }
 
-html.admin-console-theme .qa-card:hover {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .qa-card:hover {
   border-color: rgba(124, 58, 237, 0.4);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
 }
 
-html.admin-console-theme tr:hover td {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme tr:hover td {
   background: rgba(255, 255, 255, 0.03);
 }
 
-html.admin-console-theme th {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme th {
   color: var(--muted);
   border-bottom-color: var(--border);
 }
 
-html.admin-console-theme td {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme td {
   border-bottom-color: var(--border);
 }
 
-html.admin-console-theme .card-hd {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .card-hd {
   border-bottom-color: var(--border);
 }
 
-html.admin-console-theme .btn-primary {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .btn-primary {
   background: linear-gradient(135deg, #7c3aed, #6366f1);
   color: #fff;
 }
 
-html.admin-console-theme .btn-primary:hover {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .btn-primary:hover {
   background: linear-gradient(135deg, #8b5cf6, #818cf8);
 }
 
-html.admin-console-theme .btn-sm,
-html.admin-console-theme .btn-cancel {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .btn-sm,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .btn-cancel {
   background: #0d1017;
   border-color: var(--border);
   color: var(--mid);
 }
 
-html.admin-console-theme .btn-sm:hover,
-html.admin-console-theme .btn-cancel:hover {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .btn-sm:hover,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .btn-cancel:hover {
   background: var(--surface);
   color: var(--black);
 }
 
-html.admin-console-theme .btn-sm.active-f {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .btn-sm.active-f {
   background: #7c3aed;
   color: #fff;
   border-color: #7c3aed;
 }
 
-html.admin-console-theme .modal-overlay {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .modal-overlay {
   background: rgba(0, 0, 0, 0.65);
 }
 
-html.admin-console-theme .mobile-topbar {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .mobile-topbar {
   background: rgba(8, 10, 16, 0.9);
   border-bottom-color: var(--border);
 }
 
-html.admin-console-theme .mobile-menu-btn {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .mobile-menu-btn {
   background: var(--surface);
   border-color: var(--border);
   color: var(--black);
 }
 
-html.admin-console-theme .toast {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .toast {
   background: #1e2230;
   border: 1px solid var(--border);
 }
 
-html.admin-console-theme .page-hd h2,
-html.admin-console-theme .stat-val {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .page-hd h2,
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .stat-val {
   color: var(--black);
 }
 
-html.admin-console-theme .rb-master {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .rb-master {
   background: rgba(124, 58, 237, 0.15);
   color: #c4b5fd;
   border-color: rgba(124, 58, 237, 0.35);
 }
 
-html.admin-console-theme .pill-status {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .pill-status {
   background: rgba(124, 58, 237, 0.12);
   border-color: rgba(124, 58, 237, 0.3);
   color: #c4b5fd;
 }
 
-html.admin-console-theme #app[data-role="master"] {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme #app[data-role="master"] {
   --accent: #a78bfa;
   --accent-soft: rgba(124, 58, 237, 0.15);
   --accent-border: rgba(124, 58, 237, 0.35);
   --accent-muted: #c4b5fd;
 }
 
-html.admin-console-theme ::-webkit-scrollbar-thumb {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.12);
 }
 
-html.admin-console-theme .dev-qa-login-hint {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .dev-qa-login-hint {
   color: #fbbf24 !important;
   background: rgba(251, 191, 36, 0.08);
   border: 1px solid rgba(251, 191, 36, 0.2);
@@ -281,6 +541,10 @@ html.admin-console-theme .dev-qa-login-hint {
   padding: 8px 10px;
 }
 
-html.admin-console-theme .logout-btn:hover {
+html.admin-console-theme,
+html.principal-console-theme,
+html.hod-console-theme,
+html.teacher-console-theme,
+html.college-admin-console-theme .logout-btn:hover {
   color: var(--red);
 }

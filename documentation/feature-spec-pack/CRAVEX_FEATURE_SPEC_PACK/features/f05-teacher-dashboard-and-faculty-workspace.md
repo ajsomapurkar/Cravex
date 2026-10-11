@@ -50,9 +50,10 @@ Do not remove phone-based columns or existing dashboard queries until a dual-rea
 
 ## 9. Acceptance criteria
 
-- [ ] Teacher can carry out assigned-subject work end-to-end.
+- [x] Dark **Faculty Workspace** with my-classes list from `subject_assignments` and submission status UI (`teacher-module.js`, QA `91999191995`).
+- [ ] Teacher can carry out assigned-subject work end-to-end with server-enforced scope.
 - [ ] Schedule, attendance, marks and lessons share the same assignment/course identity.
-- [ ] Save/submit/error/review states are explicit and audited.
+- [ ] Save/submit/error/review states are explicit and audited (beyond demo localStorage).
 - [ ] Historical records are protected from silent edits.
 
 ## 10. Dependencies

@@ -1,0 +1,106 @@
+/**
+ * F03 — Principal Institution Console (dark)
+ * Active with html.principal-console-theme
+ */
+
+html.principal-console-theme {
+  --principal-accent: #2dd4bf;
+  --principal-accent-soft: rgba(45, 212, 191, 0.12);
+  --principal-accent-border: rgba(45, 212, 191, 0.35);
+}
+
+html.principal-console-theme body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(15, 118, 110, 0.22), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(45, 212, 191, 0.08), transparent);
+}
+
+html.principal-console-theme .nav-item.active {
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.35);
+}
+
+html.principal-console-theme .btn-login,
+html.principal-console-theme .btn-primary {
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+}
+
+html.principal-console-theme .btn-login:hover,
+html.principal-console-theme .btn-primary:hover {
+  background: linear-gradient(135deg, #14b8a6, #2dd4bf);
+}
+
+html.principal-console-theme .workspace-hero {
+  border-left-color: #14b8a6;
+}
+
+html.principal-console-theme .user-av {
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  box-shadow: 0 0 0 2px #0e1118, 0 0 0 3px #14b8a6;
+}
+
+html.principal-console-theme .rb-principal {
+  background: var(--principal-accent-soft);
+  color: #5eead4;
+  border-color: var(--principal-accent-border);
+}
+
+html.principal-console-theme .pill-status {
+  background: var(--principal-accent-soft);
+  border-color: var(--principal-accent-border);
+  color: #5eead4;
+}
+
+html.principal-console-theme #app[data-role="principal"] {
+  --accent: #2dd4bf;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --accent-border: rgba(45, 212, 191, 0.35);
+  --accent-muted: #5eead4;
+}
+
+.principal-module-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: rgba(45, 212, 191, 0.08);
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  font-size: 12px;
+  color: var(--mid);
+}
+
+.principal-module-banner strong {
+  color: #5eead4;
+  font-weight: 500;
+}
+
+.approval-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.approval-row:last-child {
+  border-bottom: none;
+}
+
+.approval-meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.meeting-card {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.meeting-card:last-child {
+  border-bottom: none;
+}

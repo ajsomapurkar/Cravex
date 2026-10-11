@@ -50,10 +50,11 @@ Keep existing HOD views and their empty states. New queries must not broaden res
 
 ## 9. Acceptance criteria
 
-- [ ] HOD sees only assigned department data.
-- [ ] HOD can manage allocations/schedules and review teaching/assessment evidence.
-- [ ] Pending/returned/approved statuses are persisted and audited.
-- [ ] Department metrics derive from source records, not hardcoded samples.
+- [x] HOD dark **Department Operations Console** with department-scoped nav (`hod-module.js`, QA `91999191994`).
+- [x] Review queue for pending **resources** (approve/return with reason); department KPIs from live tables.
+- [ ] HOD sees only assigned department data under enforced RLS (client filters by `department_id` today).
+- [ ] Pending/returned/approved statuses fully audited via `hod_decision_audit` after migration apply.
+- [ ] Timetable, lesson-plan approval graph, and workload checks (F06/F12).
 
 ## 10. Dependencies
 

@@ -1,16 +1,27 @@
 # Feature implementation tracker (F01–F21)
 
 **Spec pack:** [feature-spec-pack/CRAVEX_FEATURE_SPEC_PACK/README.md](feature-spec-pack/CRAVEX_FEATURE_SPEC_PACK/README.md)  
-**Last reviewed against repo:** 2026-10-11  
+**Role model (4 product roles):** [ROLE_MODEL_AND_PERMISSION_MATRIX.md](ROLE_MODEL_AND_PERMISSION_MATRIX.md)  
+**Last reviewed against repo:** 2026-10-11
+
+### Gap vs four-role product model (dashboard today)
+
+| Topic | Target | Current repo / live |
+|--------|--------|---------------------|
+| Login roles | `college_admin`, `principal`, `hod`, `teacher` only | **Master Admin** still on login + QA bypass; legacy `admin`/`master` in app logic |
+| Principal in DB | In `users_role_check` | Migration in repo; **not necessarily applied** on live Supabase |
+| Authorization | Server + RLS; UI not proof | Direct anon queries + client role picker (F01 open) |
+| Module UIs | Matrix-driven capabilities | F03/F04/F05 dark consoles shipped; **College Admin (F02) module not yet** |
+| Student login | Out of scope | No student login UI (OK) |  
 **Legend:** ✅ Done (verified E2E) · 🟡 In repo / partial · 🔴 Not started · ⚠️ P0 blocker
 
 | ID | Feature | Priority | Repo status | Primary evidence / next step |
 |---|---|---|---|---|
 | F01 | Security, auth, tenant isolation | P0 | 🟡 | `supabase/migrations/20261011120100_p0_anon_remediation_template.sql` (template only); `admin-console` + `_shared/session.ts`; CORS updates on edge functions. **Next:** apply RLS remediation on staging; remove QA OTP bypass before pilot. |
-| F02 | Admin console & central config | P1 | 🟡 | Migration `20261011120000_principal_admin_config.sql`; `supabase/functions/admin-console/`; `website/assets/js/admin/config-console.js`; Settings on admin host. **Next:** deploy function + migration; wire all modules to config APIs. |
-| F03 | Principal dashboard & governance | P1 | 🟡 | Principal in `workspace.js` + dashboard role picker; DB role in migration (not live until migrate). **Next:** Principal-only routes and approval workflows per spec. |
-| F04 | HOD department operations | P1 | 🟡 | HOD nav/workspace in dashboard UI; schema `departments.hod_user_id`. **Next:** verify auth on HOD actions; course-file review lifecycle (spec). |
-| F05 | Teacher faculty workspace | P1 | 🟡 | Role workspace UI (`dashboard-ui.css`, `workspace.js`). **Next:** end-to-end teacher flows (attendance, plans, files) with enforced RLS. |
+| F02 | Admin console & central config | P1 | 🟡 | **Dark College Admin Console** (`college-admin-module.js`, setup readiness checklist); `admin-console` Edge Function + config migration in repo. **Next:** server-side user provisioning rules, staged bulk import, deploy admin-console. |
+| F03 | Principal dashboard & governance | P1 | 🟡 | **Dark Institution Console** (`principal-console-theme`, `principal-module.js`): approval queue, HOD governance, meetings; migration `20261011143000_principal_governance.sql`. **Next:** apply migrations on staging, server-side auth for approvals, full marks freeze workflow. |
+| F04 | HOD department operations | P1 | 🟡 | **Dark HOD Console** (`hod-console-theme`, `hod-module.js`): review queue, dept KPIs, meetings; migration `20261011150000_hod_operations.sql`. **Next:** dept-scoped RLS, lesson-plan approval states, timetable (F06). |
+| F05 | Teacher faculty workspace | P1 | 🟡 | **Dark Teaching Workspace** (`teacher-console-theme`, `teacher-module.js`): my classes, submissions, KPIs from `subject_assignments`. **Next:** assignment-scoped RLS, real marks submit workflow (F10). |
 | F06 | Timetable live publishing | P1 | 🔴 | No versioned timetable model in repo. **Next:** implement per `f06-*.md` after F07/F02. |
 | F07 | Calendar, schemes, regulations | P1 | 🟡 | Partial subject/academic fields in existing schema (see audit inventory). **Next:** versioned rules + admin config linkage. |
 | F08 | Student records & mentoring | P1 | 🟡 | Existing student tables + dashboard queries. **Next:** lifecycle, mentoring, secure access (F01). |

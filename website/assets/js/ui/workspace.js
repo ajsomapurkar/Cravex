@@ -31,10 +31,10 @@
         status: 'Principal scope',
       },
       quickActions: [
-        { nav: 'settings', icon: '⚙', title: 'Institution settings', desc: 'Published config & audit trail' },
-        { nav: 'risk', icon: '▲', title: 'Academic risk', desc: 'At-risk students college-wide' },
+        { nav: 'approvals', icon: '✓', title: 'Approval queue', desc: 'Evidence, resources & policy items' },
+        { nav: 'departments', icon: '▦', title: 'HOD governance', desc: 'Assign heads of department' },
+        { nav: 'meetings', icon: '◷', title: 'Meetings', desc: 'Agenda, minutes & action items' },
         { nav: 'marks', icon: '◇', title: 'Assessment review', desc: 'Internal marks & submissions' },
-        { nav: 'notices', icon: '☰', title: 'Announcements', desc: 'Notices sent to students' },
       ],
     },
     college_admin: {
@@ -48,11 +48,10 @@
         status: 'Configuration hub',
       },
       quickActions: [
-        { nav: 'departments', icon: '▦', title: 'Departments', desc: 'HODs, codes & structure' },
-        { nav: 'teachers', icon: '◎', title: 'Add teacher', desc: 'Provision faculty accounts' },
-        { nav: 'broadcast', icon: '◈', title: 'Broadcast', desc: 'Message all students' },
-        { nav: 'knowledge', icon: '◉', title: 'Knowledge base', desc: 'Upload branch PDFs' },
-        { nav: 'settings', icon: '⚙', title: 'Admin settings', desc: 'Versioned configuration' },
+        { nav: 'readiness', icon: '✓', title: 'Setup readiness', desc: 'Checklist before go-live' },
+        { nav: 'departments', icon: '▦', title: 'Departments', desc: 'Structure & codes' },
+        { nav: 'teachers', icon: '◎', title: 'Faculty', desc: 'Provision teachers' },
+        { nav: 'settings', icon: '⚙', title: 'Settings', desc: 'Versioned configuration' },
       ],
     },
     hod: {
@@ -66,10 +65,10 @@
         status: 'Department scope',
       },
       quickActions: [
-        { nav: 'mydept', icon: '▦', title: 'My department', desc: 'Teachers, subjects & HOD tools' },
-        { nav: 'lessonplan', icon: '▤', title: 'Lesson plans', desc: 'Coverage across the department' },
-        { nav: 'marks', icon: '◇', title: 'Internal marks', desc: 'Review IA & assessment records' },
-        { nav: 'risk', icon: '▲', title: 'At-risk students', desc: 'Attendance & performance alerts' },
+        { nav: 'hodreviews', icon: '✓', title: 'Review queue', desc: 'Course files & faculty submissions' },
+        { nav: 'mydept', icon: '▦', title: 'My department', desc: 'Faculty roster & subject allocation' },
+        { nav: 'lessonplan', icon: '▤', title: 'Lesson plans', desc: 'Syllabus coverage & backlog' },
+        { nav: 'marks', icon: '◇', title: 'Internal marks', desc: 'Verify IA before principal freeze' },
       ],
     },
     teacher: {
@@ -83,10 +82,10 @@
         status: 'Assigned classes only',
       },
       quickActions: [
-        { nav: 'sessions', icon: '◉', title: 'Attendance sessions', desc: 'View bot session history' },
-        { nav: 'marks', icon: '◇', title: 'Enter marks', desc: 'IA, assignment & SEE' },
+        { nav: 'myclasses', icon: '▤', title: 'My classes', desc: 'Subjects, sections & batches' },
         { nav: 'lessonplan', icon: '▤', title: 'Lesson plan', desc: 'Topics, COs & coverage' },
-        { nav: 'students', icon: '◉', title: 'Class roster', desc: 'Students in your sections' },
+        { nav: 'marks', icon: '◇', title: 'Enter marks', desc: 'IA, assignment & SEE' },
+        { nav: 'submissions', icon: '↗', title: 'Submissions', desc: 'HOD review status & returns' },
       ],
     },
   };
@@ -129,36 +128,74 @@
     } else if (role === 'college_admin') {
       html +=
         navSection('Configuration') +
+        navItem('readiness', 'Setup readiness', '✓') +
         navItem('departments', 'Departments', '▦') +
         navItem('teachers', 'Teachers', '◎') +
         navItem('students', 'Students', '◉') +
         navItem('sessions', 'Sessions', '◷') +
-        navItem('settings', 'Settings', '⚙');
-    } else if (isPrincipal) {
-      html +=
-        navSection('Institution') +
-        navItem('departments', 'Departments', '▦') +
-        navItem('teachers', 'Teachers', '◎') +
-        navItem('students', 'Students', '◉') +
-        navItem('sessions', 'Sessions', '◷') +
-        navItem('settings', 'Settings', '⚙');
-    } else if (isHod) {
-      html += navSection('People') + navItem('students', 'Students', '◉') + navItem('sessions', 'Sessions', '◷');
-    } else if (isTea) {
-      html +=
-        navSection('My classes') +
-        navItem('students', 'Students', '◉') +
-        navItem('sessions', 'Sessions', '◷') +
+        navItem('settings', 'Settings', '⚙') +
+        navSection('Academics') +
+        navItem('lessonplan', 'Lesson plans', '▤') +
         navItem('marks', 'Marks', '◇') +
-        navSection('Teaching') +
-        navItem('lessonplan', 'Lesson Plan', '▤') +
-        navSection('Student success') +
-        navItem('risk', 'Risk Monitor', '▲') +
+        navItem('risk', 'Risk monitor', '▲') +
         navSection('Communication') +
         navItem('broadcast', 'Broadcast', '◈') +
         navItem('notices', 'Notices', '☰') +
         navSection('Resources') +
-        navItem('knowledge', 'Knowledge Base', '◉');
+        navItem('knowledge', 'Knowledge base', '◉');
+      return html;
+    } else if (isPrincipal) {
+      html +=
+        navSection('Governance') +
+        navItem('approvals', 'Approval queue', '✓') +
+        navItem('departments', 'HOD & departments', '▦') +
+        navItem('meetings', 'Meetings', '◷') +
+        navSection('Institution') +
+        navItem('students', 'Students', '◉') +
+        navItem('teachers', 'Teachers', '◎') +
+        navItem('marks', 'Marks review', '◇') +
+        navItem('risk', 'Academic risk', '▲') +
+        navSection('Communication') +
+        navItem('notices', 'Callouts', '☰') +
+        navItem('broadcast', 'Broadcast', '◈') +
+        navItem('settings', 'Settings', '⚙');
+      return html;
+    } else if (isHod) {
+      html +=
+        navSection('Department') +
+        navItem('mydept', 'My department', '▦') +
+        navItem('hodreviews', 'Review queue', '✓') +
+        navItem('hodmeetings', 'Dept meetings', '◷') +
+        navSection('Academics') +
+        navItem('lessonplan', 'Lesson plans', '▤') +
+        navItem('marks', 'Marks review', '◇') +
+        navItem('risk', 'At-risk students', '▲') +
+        navSection('People') +
+        navItem('students', 'Students', '◉') +
+        navItem('sessions', 'Sessions', '◷') +
+        navSection('Communication') +
+        navItem('notices', 'Notices', '☰') +
+        navItem('broadcast', 'Broadcast', '◈') +
+        navSection('Resources') +
+        navItem('knowledge', 'Knowledge base', '◉');
+      return html;
+    } else if (isTea) {
+      html +=
+        navSection('My classes') +
+        navItem('myclasses', 'My classes', '▤') +
+        navItem('students', 'Class roster', '◉') +
+        navItem('sessions', 'Attendance', '◷') +
+        navSection('Teaching') +
+        navItem('lessonplan', 'Lesson plan', '▤') +
+        navItem('marks', 'Marks entry', '◇') +
+        navItem('submissions', 'Submissions', '↗') +
+        navSection('Student success') +
+        navItem('risk', 'Risk monitor', '▲') +
+        navSection('Communication') +
+        navItem('notices', 'Notices', '☰') +
+        navItem('broadcast', 'Broadcast', '◈') +
+        navSection('Resources') +
+        navItem('knowledge', 'Knowledge base', '◉');
       return html;
     }
 

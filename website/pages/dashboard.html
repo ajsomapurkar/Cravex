@@ -18,8 +18,12 @@
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="/assets/css/dashboard-ui.css?v=20261011">
-  <link rel="stylesheet" href="/assets/css/admin-dark-theme.css?v=20261011">
+  <link rel="stylesheet" href="/assets/css/dashboard-ui.css?v=20261011f05">
+  <link rel="stylesheet" href="/assets/css/admin-dark-theme.css?v=20261011f05">
+  <link rel="stylesheet" href="/assets/css/principal-console.css?v=20261011f05">
+  <link rel="stylesheet" href="/assets/css/hod-console.css?v=20261011f05">
+  <link rel="stylesheet" href="/assets/css/teacher-console.css?v=20261011f05">
+  <link rel="stylesheet" href="/assets/css/college-admin-console.css?v=20261011f02">
   <style>
     :root {
       --bg: #fafafa;
@@ -1187,8 +1191,8 @@
         <div class="login-err" id="l-err"></div>
         <div class="login-divider"></div>
         <div class="login-hint">A 6-digit code will be sent to your WhatsApp.<br>Your role is verified automatically.</div>
-        <!-- TEST ONLY (admin QA): whitelisted 91999191991 + OTP 123456 — server send-otp bypass; remove before production -->
-        <div class="login-hint dev-qa-login-hint" id="dev-qa-login-hint" style="display:none;margin-top:10px;color:var(--amber);font-size:11px"></div>
+        <!-- TEST ONLY: whitelisted QA phones + OTP 123456 — no WhatsApp; remove before production -->
+        <div class="login-hint dev-qa-login-hint" id="dev-qa-login-hint" style="display:none;margin-top:10px;color:var(--amber);font-size:11px;line-height:1.45"></div>
       </div>
 
       <!-- STEP 2: OTP entry -->
@@ -1618,8 +1622,12 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/assets/js/ui/workspace.js?v=20261011"></script>
-  <script src="/assets/js/admin/config-console.js?v=20261011"></script>
+  <script src="/assets/js/ui/workspace.js?v=20261011f05"></script>
+  <script src="/assets/js/admin/config-console.js?v=20261011f05"></script>
+  <script src="/assets/js/principal/principal-module.js?v=20261011f03b"></script>
+  <script src="/assets/js/hod/hod-module.js?v=20261011f04b"></script>
+  <script src="/assets/js/teacher/teacher-module.js?v=20261011f05b"></script>
+  <script src="/assets/js/college-admin/college-admin-module.js?v=20261011f02"></script>
   <script>
     const SUPABASE_URL = 'https://gkuzoywsftjxnxzlufiy.supabase.co';
     window.SUPABASE_URL = SUPABASE_URL;
@@ -1657,25 +1665,44 @@
         return false;
       }
     }
-    // TEST ONLY — QA hint on admin host (paired with send-otp dev bypass)
-    const DEV_QA_PHONE = '91999191991';
+    // TEST ONLY — QA whitelist (no WhatsApp). Phone must match selected role; OTP always 123456.
     const DEV_QA_OTP = '123456';
-    const DEV_QA_USER_ID = '00000000-0000-4000-8000-000000001991';
+    const DEV_QA_ACCOUNTS = {
+      '91999191991': { loginRole: 'master', dbRole: 'admin', id: '00000000-0000-4000-8000-000000001991', name: 'QA Master Admin' },
+      '91999191992': { loginRole: 'college_admin', dbRole: 'college_admin', id: '00000000-0000-4000-8000-000000001992', name: 'QA College Admin' },
+      '91999191993': { loginRole: 'principal', dbRole: 'principal', id: '00000000-0000-4000-8000-000000001993', name: 'QA Principal' },
+      '91999191994': { loginRole: 'hod', dbRole: 'hod', id: '00000000-0000-4000-8000-000000001994', name: 'QA HOD' },
+      '91999191995': { loginRole: 'teacher', dbRole: 'teacher', id: '00000000-0000-4000-8000-000000001995', name: 'QA Teacher' },
+    };
 
-    /** TEST ONLY — skip send-otp Edge Function (avoids CORS until function is redeployed). */
-    function isDevQaPhone(phone) {
-      return phone === DEV_QA_PHONE;
+    function getDevQaAccount(phone) {
+      return DEV_QA_ACCOUNTS[phone] || null;
     }
 
-    function devQaMasterUser(phone) {
+    function isDevQaPhone(phone) {
+      return !!getDevQaAccount(phone);
+    }
+
+    function devQaUser(phone) {
+      const spec = getDevQaAccount(phone);
+      if (!spec) return null;
       return {
-        id: DEV_QA_USER_ID,
-        name: 'Test Master Admin',
+        id: spec.id,
+        name: spec.name,
         phone_number: phone,
-        role: 'admin',
+        role: spec.dbRole,
         college_id: null,
         is_active: true,
+        _qaLoginRole: spec.loginRole,
       };
+    }
+
+    function formatDevQaHintHtml() {
+      const rows = Object.entries(DEV_QA_ACCOUNTS).map(([ph, s]) => {
+        const lbl = { master: 'Master', college_admin: 'College Admin', principal: 'Principal', hod: 'HOD', teacher: 'Teacher' }[s.loginRole] || s.loginRole;
+        return `<div>${ph} · <strong>${lbl}</strong></div>`;
+      }).join('');
+      return `<strong>QA login</strong> (no WhatsApp) · code <strong>${DEV_QA_OTP}</strong><br>${rows}`;
     }
 
     function showOtpStep(phone, name) {
@@ -1692,7 +1719,7 @@
       window._cvxSession = sessionToken || '';
       cu = user;
       window.cu = cu;
-      cu._role = ((!user.college_id && user.role === 'admin') ? 'master' : user.role);
+      cu._role = user._role || ((!user.college_id && user.role === 'admin') ? 'master' : user.role);
       cid = user.college_id;
       isMaster = (cu._role === 'master');
       saveSessionCache(user, sessionToken);
@@ -1716,14 +1743,18 @@
         const hint = document.getElementById('dev-qa-login-hint');
         if (hint) {
           hint.style.display = 'block';
-          hint.textContent = `QA login (no WhatsApp): ${DEV_QA_PHONE} · Master Admin · code ${DEV_QA_OTP}`;
+          hint.innerHTML = formatDevQaHintHtml();
         }
-        const roleSel = document.getElementById('l-role');
-        if (roleSel) roleSel.value = 'master';
-        if (typeof onRoleChange === 'function') onRoleChange('master');
-        document.querySelectorAll('.login-role-opt').forEach(b => b.classList.toggle('selected', b.dataset.role === 'master'));
       });
     }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.CVX_ADMIN_HOST) return;
+      const hint = document.getElementById('dev-qa-login-hint');
+      if (hint) {
+        hint.style.display = 'block';
+        hint.innerHTML = formatDevQaHintHtml();
+      }
+    });
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrdXpveXdzZnRqeG54emx1Zml5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNTk0ODksImV4cCI6MjA4ODczNTQ4OX0.xOMHrNJu4yDxS3_WVdUzA6gQ_Ow1rmHZCZDktuxnAc8';
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1771,7 +1802,14 @@
       btn.textContent = 'Sending…'; btn.disabled = true;
       // TEST ONLY: whitelisted phone — never call send-otp (no WhatsApp, no CORS).
       if (isDevQaPhone(phone)) {
-        showOtpStep(phone, devQaMasterUser(phone).name);
+        const qa = getDevQaAccount(phone);
+        if (qa.loginRole !== role) {
+          err.textContent = `❌ Role mismatch — use "${qa.loginRole}" for this QA number.`;
+          btn.textContent = 'Send OTP via WhatsApp →';
+          btn.disabled = false;
+          return;
+        }
+        showOtpStep(phone, devQaUser(phone).name);
         btn.textContent = 'Send OTP via WhatsApp →';
         btn.disabled = false;
         return;
@@ -1816,8 +1854,16 @@
       err.textContent = '';
       if (!otp || otp.length !== 6) { err.textContent = 'Enter the 6-digit code.'; return; }
       btn.textContent = 'Verifying…'; btn.disabled = true;
-      // TEST ONLY: local master login — no send-otp verify call.
+      // TEST ONLY: local QA login — no send-otp verify call.
       if (isDevQaPhone(phone)) {
+        const selectedRole = document.getElementById('l-role').value;
+        const qa = getDevQaAccount(phone);
+        if (qa && qa.loginRole !== selectedRole) {
+          err.textContent = `❌ Role mismatch — sign in as "${qa.loginRole}".`;
+          btn.textContent = 'Verify & Login →';
+          btn.disabled = false;
+          return;
+        }
         if (otp !== DEV_QA_OTP) {
           err.textContent = '❌ Incorrect or expired code. Try again.';
           btn.textContent = 'Verify & Login →';
@@ -1825,7 +1871,9 @@
           return;
         }
         try {
-          await finishLoginSession(devQaMasterUser(phone), '');
+          const u = devQaUser(phone);
+          u._role = qa.loginRole;
+          await finishLoginSession(u, '');
         } catch (e) {
           err.textContent = '❌ Could not start session.';
           btn.textContent = 'Verify & Login →';
@@ -1880,7 +1928,7 @@
       else doSendOtp();
     });
 
-    function doLogout() { clearSessionCache(); window._cvxSession = ''; cu = null; cid = null; isMaster = false; allColleges = []; document.getElementById('login-step1').style.display = 'block'; document.getElementById('login-step2').style.display = 'none'; document.getElementById('l-err').textContent = ''; document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app').style.display = 'none'; }
+    function doLogout() { if (window.CvxPrincipal) CvxPrincipal.clearTheme(); if (window.CvxHod) CvxHod.clearTheme(); if (window.CvxTeacher) CvxTeacher.clearTheme(); if (window.CvxCollegeAdmin) CvxCollegeAdmin.clearTheme(); clearSessionCache(); window._cvxSession = ''; cu = null; cid = null; isMaster = false; allColleges = []; document.getElementById('login-step1').style.display = 'block'; document.getElementById('login-step2').style.display = 'none'; document.getElementById('l-err').textContent = ''; document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app').style.display = 'none'; }
 
     // ── INIT ──────────────────────────────────────────────────────────────
     async function initApp() {
@@ -1891,6 +1939,21 @@
       document.getElementById('u-av').textContent = name[0].toUpperCase();
       document.getElementById('u-role-tag').textContent = { master: 'Master Admin', college_admin: 'College Admin', principal: 'Principal', hod: 'HOD', teacher: 'Teacher' }[cu._role] || cu._role;
       if (isMaster) { const { data } = await db.from('colleges').select('id,name').order('name'); allColleges = data || []; if (!cid && allColleges.length) cid = allColleges[0].id; }
+      else if (!cid) {
+        const { data: colleges } = await db.from('colleges').select('id,name').order('name').limit(1);
+        if (colleges && colleges.length) { cid = colleges[0].id; cu.college_id = cid; }
+      }
+      if (cu._role === 'principal' && window.CvxPrincipal) CvxPrincipal.applyTheme();
+      else if (cu._role === 'hod' && window.CvxHod) CvxHod.applyTheme();
+      else if (cu._role === 'teacher' && window.CvxTeacher) CvxTeacher.applyTheme();
+      else if (cu._role === 'college_admin' && window.CvxCollegeAdmin) CvxCollegeAdmin.applyTheme();
+      else {
+        if (window.CvxPrincipal) CvxPrincipal.clearTheme();
+        if (window.CvxHod) CvxHod.clearTheme();
+        if (window.CvxTeacher) CvxTeacher.clearTheme();
+        if (window.CvxCollegeAdmin) CvxCollegeAdmin.clearTheme();
+      }
+      if (cu._role === 'hod' && window.CvxHod) await CvxHod.ensureDepartmentContext(db, cu, cid);
       if (window.CvxWorkspace) CvxWorkspace.applyShell(cu._role);
       buildNav(cu._role);
       buildPages(cu._role);
@@ -1900,24 +1963,49 @@
 
     // ── NAV ───────────────────────────────────────────────────────────────
     function buildNavFallback(role) {
-      const isMstr = role === 'master', isAdm = role === 'college_admin' || isMstr || role === 'principal', isHod = role === 'hod', isTea = role === 'teacher';
+      const isMstr = role === 'master', isPrincipal = role === 'principal', isAdm = role === 'college_admin' || isMstr || isPrincipal, isHod = role === 'hod', isTea = role === 'teacher';
       let h = '<div class="nav-sec">Overview</div><div class="nav-item" onclick="nav(\'overview\')" id="n-overview"><span class="ni">◈</span> Dashboard</div>';
       if (isHod) h += '<div class="nav-item" onclick="nav(\'mydept\')" id="n-mydept"><span class="ni">▦</span> My Department</div>';
       if (isMstr) {
         h += '<div class="nav-sec">Platform</div><div class="nav-item" onclick="nav(\'colleges\')" id="n-colleges"><span class="ni">◻</span> Colleges</div><div class="nav-item" onclick="nav(\'analytics\')" id="n-analytics"><span class="ni">◇</span> Analytics</div>';
         h += '<div class="nav-sec">Institution</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div><div class="nav-item" onclick="nav(\'teachers\')" id="n-teachers"><span class="ni">◎</span> Teachers</div><div class="nav-item" onclick="nav(\'departments\')" id="n-departments"><span class="ni">▦</span> Departments</div><div class="nav-item" onclick="nav(\'settings\')" id="n-settings"><span class="ni">⚙</span> Settings</div>';
+      } else if (isPrincipal) {
+        h += '<div class="nav-sec">Governance</div><div class="nav-item" onclick="nav(\'approvals\')" id="n-approvals"><span class="ni">✓</span> Approval queue</div><div class="nav-item" onclick="nav(\'departments\')" id="n-departments"><span class="ni">▦</span> HOD & departments</div><div class="nav-item" onclick="nav(\'meetings\')" id="n-meetings"><span class="ni">◷</span> Meetings</div>';
+        h += '<div class="nav-sec">Institution</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'teachers\')" id="n-teachers"><span class="ni">◎</span> Teachers</div><div class="nav-item" onclick="nav(\'marks\')" id="n-marks"><span class="ni">◇</span> Marks review</div><div class="nav-item" onclick="nav(\'risk\')" id="n-risk"><span class="ni">▲</span> Academic risk</div>';
+        h += '<div class="nav-sec">Communication</div><div class="nav-item" onclick="nav(\'notices\')" id="n-notices"><span class="ni">☰</span> Callouts</div><div class="nav-item" onclick="nav(\'broadcast\')" id="n-broadcast"><span class="ni">◈</span> Broadcast</div><div class="nav-item" onclick="nav(\'settings\')" id="n-settings"><span class="ni">⚙</span> Settings</div>';
+        return h;
+      } else if (role === 'college_admin') {
+        h += '<div class="nav-sec">Configuration</div><div class="nav-item" onclick="nav(\'readiness\')" id="n-readiness"><span class="ni">✓</span> Setup readiness</div><div class="nav-item" onclick="nav(\'departments\')" id="n-departments"><span class="ni">▦</span> Departments</div><div class="nav-item" onclick="nav(\'teachers\')" id="n-teachers"><span class="ni">◎</span> Teachers</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div><div class="nav-item" onclick="nav(\'settings\')" id="n-settings"><span class="ni">⚙</span> Settings</div>';
+        h += '<div class="nav-sec">Academics</div><div class="nav-item" onclick="nav(\'lessonplan\')" id="n-lessonplan"><span class="ni">▤</span> Lesson plans</div><div class="nav-item" onclick="nav(\'marks\')" id="n-marks"><span class="ni">◇</span> Marks</div><div class="nav-item" onclick="nav(\'risk\')" id="n-risk"><span class="ni">▲</span> Risk monitor</div>';
+        h += '<div class="nav-sec">Communication</div><div class="nav-item" onclick="nav(\'broadcast\')" id="n-broadcast"><span class="ni">◈</span> Broadcast</div><div class="nav-item" onclick="nav(\'notices\')" id="n-notices"><span class="ni">☰</span> Notices</div>';
+        h += '<div class="nav-sec">Resources</div><div class="nav-item" onclick="nav(\'knowledge\')" id="n-knowledge"><span class="ni">◉</span> Knowledge base</div>';
+        return h;
       } else if (isAdm && !isTea) {
         h += '<div class="nav-sec">Configuration</div><div class="nav-item" onclick="nav(\'departments\')" id="n-departments"><span class="ni">▦</span> Departments</div><div class="nav-item" onclick="nav(\'teachers\')" id="n-teachers"><span class="ni">◎</span> Teachers</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div><div class="nav-item" onclick="nav(\'settings\')" id="n-settings"><span class="ni">⚙</span> Settings</div>';
+      } else if (isHod) {
+        h += '<div class="nav-sec">Department</div><div class="nav-item" onclick="nav(\'mydept\')" id="n-mydept"><span class="ni">▦</span> My department</div><div class="nav-item" onclick="nav(\'hodreviews\')" id="n-hodreviews"><span class="ni">✓</span> Review queue</div><div class="nav-item" onclick="nav(\'hodmeetings\')" id="n-hodmeetings"><span class="ni">◷</span> Dept meetings</div>';
+        h += '<div class="nav-sec">Academics</div><div class="nav-item" onclick="nav(\'lessonplan\')" id="n-lessonplan"><span class="ni">▤</span> Lesson plans</div><div class="nav-item" onclick="nav(\'marks\')" id="n-marks"><span class="ni">◇</span> Marks review</div><div class="nav-item" onclick="nav(\'risk\')" id="n-risk"><span class="ni">▲</span> At-risk students</div>';
+        h += '<div class="nav-sec">People</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div>';
+        h += '<div class="nav-sec">Communication</div><div class="nav-item" onclick="nav(\'notices\')" id="n-notices"><span class="ni">☰</span> Notices</div><div class="nav-item" onclick="nav(\'broadcast\')" id="n-broadcast"><span class="ni">◈</span> Broadcast</div>';
+        h += '<div class="nav-sec">Resources</div><div class="nav-item" onclick="nav(\'knowledge\')" id="n-knowledge"><span class="ni">◉</span> Knowledge base</div>';
+        return h;
       } else if (isTea) {
-        h += '<div class="nav-sec">My classes</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div><div class="nav-item" onclick="nav(\'marks\')" id="n-marks"><span class="ni">◇</span> Marks</div>';
+        h += '<div class="nav-sec">My classes</div><div class="nav-item" onclick="nav(\'myclasses\')" id="n-myclasses"><span class="ni">▤</span> My classes</div><div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Class roster</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Attendance</div>';
+        h += '<div class="nav-sec">Teaching</div><div class="nav-item" onclick="nav(\'lessonplan\')" id="n-lessonplan"><span class="ni">▤</span> Lesson plan</div><div class="nav-item" onclick="nav(\'marks\')" id="n-marks"><span class="ni">◇</span> Marks entry</div><div class="nav-item" onclick="nav(\'submissions\')" id="n-submissions"><span class="ni">↗</span> Submissions</div>';
+        h += '<div class="nav-sec">Student success</div><div class="nav-item" onclick="nav(\'risk\')" id="n-risk"><span class="ni">▲</span> Risk monitor</div>';
+        h += '<div class="nav-sec">Communication</div><div class="nav-item" onclick="nav(\'notices\')" id="n-notices"><span class="ni">☰</span> Notices</div><div class="nav-item" onclick="nav(\'broadcast\')" id="n-broadcast"><span class="ni">◈</span> Broadcast</div>';
+        h += '<div class="nav-sec">Resources</div><div class="nav-item" onclick="nav(\'knowledge\')" id="n-knowledge"><span class="ni">◉</span> Knowledge base</div>';
+        return h;
       } else {
         h += '<div class="nav-item" onclick="nav(\'students\')" id="n-students"><span class="ni">◉</span> Students</div><div class="nav-item" onclick="nav(\'sessions\')" id="n-sessions"><span class="ni">◷</span> Sessions</div>';
       }
-      if (!isTea) {
+      if (!isTea && !isHod) {
         h += '<div class="nav-sec">Academics</div><div class="nav-item" onclick="nav(\'lessonplan\')" id="n-lessonplan"><span class="ni">▤</span> Lesson Plan</div><div class="nav-item" onclick="nav(\'marks\')" id="n-marks"><span class="ni">◇</span> Marks</div><div class="nav-item" onclick="nav(\'risk\')" id="n-risk"><span class="ni">▲</span> Risk Monitor</div>';
       }
-      h += '<div class="nav-sec">Communication</div><div class="nav-item" onclick="nav(\'broadcast\')" id="n-broadcast"><span class="ni">◈</span> Broadcast</div><div class="nav-item" onclick="nav(\'notices\')" id="n-notices"><span class="ni">☰</span> Notices</div>';
-      h += '<div class="nav-sec">Knowledge</div><div class="nav-item" onclick="nav(\'knowledge\')" id="n-knowledge"><span class="ni">◉</span> Knowledge Base</div>';
+      if (!isHod) {
+        h += '<div class="nav-sec">Communication</div><div class="nav-item" onclick="nav(\'broadcast\')" id="n-broadcast"><span class="ni">◈</span> Broadcast</div><div class="nav-item" onclick="nav(\'notices\')" id="n-notices"><span class="ni">☰</span> Notices</div>';
+        h += '<div class="nav-sec">Knowledge</div><div class="nav-item" onclick="nav(\'knowledge\')" id="n-knowledge"><span class="ni">◉</span> Knowledge Base</div>';
+      }
       return h;
     }
 
@@ -1928,7 +2016,7 @@
 
     // ── PAGES ─────────────────────────────────────────────────────────────
     function buildPages(role) {
-      const isMstr = role === 'master', isAdm = role === 'college_admin' || role === 'master' || role === 'principal', isHod = role === 'hod', isTea = role === 'teacher', isCfg = isAdm;
+      const isMstr = role === 'master', isCollegeAdmin = role === 'college_admin', isPrincipal = role === 'principal', isAdm = isCollegeAdmin || role === 'master' || isPrincipal, isHod = role === 'hod', isTea = role === 'teacher', isCfg = isAdm;
       const rbCls = { master: 'rb-master', college_admin: 'rb-college_admin', principal: 'rb-principal', hod: 'rb-hod', teacher: 'rb-teacher' }[role] || 'rb-college_admin';
       const rbLbl = { master: 'Master Admin', college_admin: 'College Admin', principal: 'Principal', hod: 'HOD', teacher: 'Teacher' }[role] || role;
       const colBar = isMstr ? `<div class="col-select-bar"><label>College</label><select id="col-sel" onchange="onColChange(this.value)">${allColleges.map(c => `<option value="${c.id}"${c.id === cid ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>` : '';
@@ -1942,6 +2030,10 @@
   <!-- OVERVIEW -->
   <div class="page" id="p-overview">
     ${overviewShell}
+    ${isPrincipal ? '<div class="principal-module-banner"><span><strong>F03 · Principal module</strong> — Institution Console (dark theme)</span><span>College scope only · no platform master access</span></div><div class="stats-row" id="principal-gov-kpis"></div>' : ''}
+    ${isHod ? '<div class="hod-module-banner"><span><strong>F04 · HOD module</strong> — Department Operations (dark theme)</span><span>Assigned department only</span></div><div class="stats-row" id="hod-dept-kpis"></div>' : ''}
+    ${isTea ? '<div class="teacher-module-banner"><span><strong>F05 · Teacher module</strong> — Faculty Workspace (dark theme)</span><span>Assigned classes only</span></div><div class="stats-row" id="teacher-teaching-kpis"></div>' : ''}
+    ${isCollegeAdmin ? '<div class="college-admin-module-banner"><span><strong>F02 · College Admin</strong> — Institution setup (dark theme)</span><span>Single college scope</span></div><div class="stats-row" id="college-admin-setup-kpis"></div>' : ''}
     <div class="stats-row">
       <div class="stat"><div class="stat-lbl">Students</div><div class="stat-val" id="s-stu">—</div><div class="stat-sub">Registered</div></div>
       <div class="stat"><div class="stat-lbl">${isHod ? 'Faculty' : 'Teachers'}</div><div class="stat-val" id="s-tea">—</div><div class="stat-sub">${isHod ? 'In college' : 'Active'}</div></div>
@@ -1954,6 +2046,20 @@
     </div>
     <div class="card"><div class="card-hd"><h3>${isHod ? 'Department risk spotlight' : 'Top risk students'}</h3><a href="#" onclick="nav('risk');return false" style="font-size:12px;color:var(--mid);text-decoration:none">View all →</a></div><div id="o-risk-prev">${ld()}</div></div>
   </div>
+
+  ${isCollegeAdmin ? `<div class="page" id="p-readiness">
+    <div class="page-hd"><div><h2>Setup readiness</h2><p>Complete institution setup before academic go-live.</p></div></div>
+    <div id="readiness-wrap">${ld()}</div>
+  </div>` : ''}
+
+  ${isTea ? `<div class="page" id="p-myclasses">
+    <div class="page-hd"><div><h2>My classes</h2><p>Subjects and sections assigned to you this semester.</p></div></div>
+    <div class="card"><div id="myclasses-wrap">${ld()}</div></div>
+  </div>
+  <div class="page" id="p-submissions">
+    <div class="page-hd"><div><h2>Submissions</h2><p>Marks and materials sent to HOD — approved, pending, or returned.</p></div></div>
+    <div id="submissions-wrap">${ld()}</div>
+  </div>` : ''}
 
   <!-- STUDENTS -->
   <div class="page" id="p-students">
@@ -2034,19 +2140,36 @@
 
   <!-- TEACHERS -->
   ${isAdm ? `<div class="page" id="p-teachers">
-    <div class="page-hd"><div><h2>Teachers</h2><p>Faculty accounts, assignments, and contact details for this institution.</p></div><button class="btn-primary" onclick="openM('m-add-teacher')">+ Add teacher</button></div>
+    <div class="page-hd"><div><h2>Teachers</h2><p>${isPrincipal ? 'Faculty roster for oversight (provision accounts via College Admin).' : 'Faculty accounts, assignments, and contact details for this institution.'}</p></div>${isPrincipal ? '' : '<button class="btn-primary" onclick="openM(\'m-add-teacher\')">+ Add teacher</button>'}</div>
     <div class="card"><div class="card-hd"><h3>Teacher list</h3></div><div id="tea-wrap">${ld()}</div></div>
   </div>`: ''}
 
+  ${isPrincipal ? `<div class="page" id="p-approvals">
+    <div class="page-hd"><div><h2>Approval queue</h2><p>Review evidence packs, resources, and items returned from HOD verification.</p></div></div>
+    <div class="card"><div id="approvals-wrap">${ld()}</div></div>
+  </div>
+  <div class="page" id="p-meetings">
+    <div class="page-hd"><div><h2>Meetings & minutes</h2><p>Academic council, IQAC, and department reviews with action tracking.</p></div></div>
+    <div id="meetings-wrap">${ld()}</div>
+  </div>` : ''}
+
   <!-- DEPARTMENTS (PHASE 2B.5, College Admin / Master) -->
   ${isAdm ? `<div class="page" id="p-departments">
-    <div class="page-hd"><div><h2>Departments</h2><p>Organize branches, assign HODs, and manage department-scoped faculty and subjects.</p></div><button class="btn-primary" onclick="openAddDepartmentModal()">+ Add Department</button></div>
+    <div class="page-hd"><div><h2>${isPrincipal ? 'HOD governance' : 'Departments'}</h2><p>${isPrincipal ? 'Assign or remove heads of department. Changes are scoped to your college.' : 'Organize branches, assign HODs, and manage department-scoped faculty and subjects.'}</p></div>${isPrincipal ? '' : '<button class="btn-primary" onclick="openAddDepartmentModal()">+ Add Department</button>'}</div>
     <div id="dept-wrap">${ld()}</div>
   </div>`: ''}
 
   <!-- MY DEPARTMENT (PHASE 2D, HOD) -->
   ${isHod ? `<div class="page" id="p-mydept">
     <div id="mydept-wrap">${ld()}</div>
+  </div>
+  <div class="page" id="p-hodreviews">
+    <div class="page-hd"><div><h2>Review queue</h2><p>Approve or return course files and teaching evidence from your department faculty.</p></div></div>
+    <div class="card"><div id="hod-reviews-wrap">${ld()}</div></div>
+  </div>
+  <div class="page" id="p-hodmeetings">
+    <div class="page-hd"><div><h2>Department meetings</h2><p>Faculty meetings, syllabus reviews, and action tracking.</p></div></div>
+    <div id="hod-meetings-wrap">${ld()}</div>
   </div>`: ''}
 
   <!-- COLLEGES -->
@@ -2140,7 +2263,14 @@
     }
 
     // ── NAVIGATION ────────────────────────────────────────────────────────
-    const loaders = { overview: loadOverview, students: loadStudents, teachers: loadTeachers, departments: loadDepartments, mydept: loadHodDept, colleges: loadColleges, risk: loadRisk, marks: loadMarks, sessions: loadSessions, broadcast: loadBroadcast, notices: loadNotices, knowledge: loadKnowledge, analytics: loadAnalytics, lessonplan: loadLessonPlan, settings: loadSettings };
+    const loaders = { overview: loadOverview, students: loadStudents, teachers: loadTeachers, departments: loadDepartments, mydept: loadHodDept, colleges: loadColleges, risk: loadRisk, marks: loadMarks, sessions: loadSessions, broadcast: loadBroadcast, notices: loadNotices, knowledge: loadKnowledge, analytics: loadAnalytics, lessonplan: loadLessonPlan, settings: loadSettings, approvals: loadPrincipalApprovals, meetings: loadPrincipalMeetings, hodreviews: loadHodReviews, hodmeetings: loadHodMeetings, myclasses: loadTeacherMyClasses, submissions: loadTeacherSubmissions, readiness: loadCollegeReadiness };
+    function loadPrincipalApprovals() { if (window.CvxPrincipal) CvxPrincipal.loadApprovals(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadPrincipalMeetings() { if (window.CvxPrincipal) CvxPrincipal.loadMeetings(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadHodReviews() { if (window.CvxHod) CvxHod.loadReviewQueue(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadHodMeetings() { if (window.CvxHod) CvxHod.loadDeptMeetings(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadTeacherMyClasses() { if (window.CvxTeacher) CvxTeacher.loadMyClasses(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadTeacherSubmissions() { if (window.CvxTeacher) CvxTeacher.loadSubmissions(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadCollegeReadiness() { if (window.CvxCollegeAdmin) CvxCollegeAdmin.loadReadinessPage(db, cid, { esc, fmt, fmtFull, toast, empty, ld }); }
     async function loadSettings() {
       if (!cid) { const { data: fc } = await db.from('colleges').select('id').order('name').limit(1).maybeSingle(); if (fc) cid = fc.id; }
       if (!cid) { document.getElementById('settings-wrap').innerHTML = empty('', 'No college selected'); return; }
@@ -2153,7 +2283,7 @@
       const ni = document.getElementById('n-' + name);
       if (pg) pg.classList.add('active');
       if (ni) ni.classList.add('active');
-      const titles = { overview: 'Dashboard', students: 'Students', teachers: 'Teachers', departments: 'Departments', mydept: 'My Department', colleges: 'Colleges', lessonplan: 'Lesson Plan', marks: 'Marks', risk: 'Risk Monitor', sessions: 'Sessions', broadcast: 'Broadcast', notices: 'Notices', knowledge: 'Knowledge Base', analytics: 'Analytics', settings: 'Settings' };
+      const titles = { overview: 'Dashboard', students: 'Students', teachers: 'Teachers', departments: 'Departments', mydept: 'My Department', colleges: 'Colleges', lessonplan: 'Lesson Plan', marks: 'Marks', risk: 'Risk Monitor', sessions: 'Sessions', broadcast: 'Broadcast', notices: 'Notices', knowledge: 'Knowledge Base', analytics: 'Analytics', settings: 'Settings', approvals: 'Approval queue', meetings: 'Meetings', hodreviews: 'Review queue', hodmeetings: 'Dept meetings', myclasses: 'My classes', submissions: 'Submissions', readiness: 'Setup readiness' };
       const mt = document.getElementById('mobile-page-title');
       if (mt) mt.textContent = titles[name] || 'Cravex';
       if (loaders[name]) loaders[name]();
@@ -2178,6 +2308,10 @@
       document.getElementById('o-anns').innerHTML = !anns?.length ? empty('', 'No announcements yet') : anns.map(a => `<div class="ann-item"><div class="ann-date">${fmtFull(a.created_at)}</div><div class="ann-msg">${esc(a.message)}</div></div>`).join('');
       document.getElementById('o-low').innerHTML = !low?.length ? empty('', 'All students above 75%') : `<table><thead><tr><th>Student</th><th>Attendance</th></tr></thead><tbody>${low.map(r => `<tr><td>${esc(r.student_name || r.phone_number)}</td><td><span class="badge b-red">${r.attendance_percent}%</span></td></tr>`).join('')}</tbody></table>`;
       document.getElementById('o-risk-prev').innerHTML = !rstu?.length ? empty('', 'No risk data yet', 'Update attendance to calculate risk scores') : rstu.map(s => { const r = Math.round(s.risk_score || 0); const cls = r >= 60 ? 'risk-hi' : r >= 30 ? 'risk-mid' : 'risk-low'; return `<div class="risk-row"><div style="min-width:140px"><div style="font-size:13px;font-weight:500">${esc(s.name)}</div><div style="font-size:11px;color:var(--muted);font-weight:300">${s.branch || '?'}${s.division ? ' Div-' + s.division : ''}</div></div><div class="risk-bar-track"><div class="risk-bar-fill ${cls}" style="width:${r}%"></div></div><div style="min-width:36px;text-align:right;font-size:12px;font-weight:500;color:${r >= 60 ? 'var(--red)' : r >= 30 ? 'var(--amber)' : 'var(--green)'}">${r}%</div></div>`; }).join('');
+      if (cu._role === 'principal' && window.CvxPrincipal) CvxPrincipal.loadGovernanceKpis(db, cid);
+      if (cu._role === 'hod' && window.CvxHod) CvxHod.loadDeptKpis(db, cid, cu);
+      if (cu._role === 'teacher' && window.CvxTeacher) CvxTeacher.loadTeachingKpis(db, cid, cu);
+      if (cu._role === 'college_admin' && window.CvxCollegeAdmin) CvxCollegeAdmin.loadSetupKpis(db, cid);
     }
 
     // ── STUDENTS ──────────────────────────────────────────────────────────
@@ -2815,6 +2949,7 @@
       const subjects = (window._deptSubjects || []).filter(s => s.department_id === d.id);
       const hodName = d.hod ? esc(d.hod.name) : '<span style="color:var(--muted)">Unassigned</span>';
       const expanded = !!_deptExpanded[d.id];
+      const isPrinc = cu && cu._role === 'principal';
       return `<div class="card" style="margin-bottom:12px">
         <div class="card-hd" style="cursor:pointer" onclick="toggleDept('${d.id}')">
           <h3>${esc(d.name)} <span class="badge b-blue" style="font-size:10px">${esc(d.code)}</span></h3>
@@ -2822,7 +2957,7 @@
             <span>HOD: ${hodName}</span>
             <span>${teachers.length} teacher${teachers.length === 1 ? '' : 's'}</span>
             <span>${subjects.length} subject${subjects.length === 1 ? '' : 's'}</span>
-            <button class="btn-sm danger" onclick="event.stopPropagation();deleteDepartment('${d.id}','${esc(d.name)}',${teachers.length},${subjects.length})">Delete</button>
+            ${isPrinc ? '' : `<button class="btn-sm danger" onclick="event.stopPropagation();deleteDepartment('${d.id}','${esc(d.name)}',${teachers.length},${subjects.length})">Delete</button>`}
             <span style="font-size:16px">${expanded ? '▾' : '▸'}</span>
           </div>
         </div>

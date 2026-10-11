@@ -17,28 +17,41 @@ const ALLOWED_ORIGINS = new Set([
 const NETLIFY_SITE_ORIGIN = /^https:\/\/(?:[a-z0-9-]+--)?cravexcoin\.netlify\.app$/;
 const isAllowedOrigin = (origin: string) => ALLOWED_ORIGINS.has(origin) || NETLIFY_SITE_ORIGIN.test(origin);
 
-// ── TEST ONLY — QA bypass for admin.cravex.co.in (do NOT use with real student data) ──
-// Whitelisted phone: skip WhatsApp OTP; verify with fixed code 123456; session = master admin.
-// Remove or gate with env (e.g. DEV_OTP_BYPASS=false) before production pilot.
-const DEV_OTP_BYPASS_PHONE = "91999191991";
-const DEV_OTP_BYPASS_CODE = "123456";
-const DEV_OTP_BYPASS_USER_ID = "00000000-0000-4000-8000-000000001991";
+// ── TEST ONLY — QA whitelist (do NOT use with real student data) ──
+// Skip WhatsApp; verify with 123456. Each phone maps to one login role.
+const DEV_QA_OTP = "123456";
+const DEV_QA_ACCOUNTS: Record<string, { loginRole: string; dbRole: string; userId: string; name: string }> = {
+  "91999191991": { loginRole: "master", dbRole: "admin", userId: "00000000-0000-4000-8000-000000001991", name: "QA Master Admin" },
+  "91999191992": { loginRole: "college_admin", dbRole: "college_admin", userId: "00000000-0000-4000-8000-000000001992", name: "QA College Admin" },
+  "91999191993": { loginRole: "principal", dbRole: "principal", userId: "00000000-0000-4000-8000-000000001993", name: "QA Principal" },
+  "91999191994": { loginRole: "hod", dbRole: "hod", userId: "00000000-0000-4000-8000-000000001994", name: "QA HOD" },
+  "91999191995": { loginRole: "teacher", dbRole: "teacher", userId: "00000000-0000-4000-8000-000000001995", name: "QA Teacher" },
+};
 
-function isDevOtpBypassPhone(phone: string): boolean {
-  return phone === DEV_OTP_BYPASS_PHONE;
+function getDevQaAccount(phone: string) {
+  return DEV_QA_ACCOUNTS[phone] ?? null;
 }
 
-/** Synthetic master profile when no DB row exists for the test phone. */
-function devMasterUser(phone: string, fromDb: Record<string, unknown> | null) {
+function isDevOtpBypassPhone(phone: string): boolean {
+  return !!getDevQaAccount(phone);
+}
+
+function devQaUser(phone: string, fromDb: Record<string, unknown> | null) {
   if (fromDb) return fromDb;
+  const spec = getDevQaAccount(phone);
+  if (!spec) throw new Error("unknown QA phone");
   return {
-    id: DEV_OTP_BYPASS_USER_ID,
-    name: "Test Master Admin",
+    id: spec.userId,
+    name: spec.name,
     phone_number: phone,
-    role: "admin",
+    role: spec.dbRole,
     college_id: null,
     is_active: true,
   };
+}
+
+function effectiveLoginRole(user: { college_id?: string | null; role?: string }) {
+  return (!user.college_id && user.role === "admin") ? "master" : (user.role ?? "");
 }
 
 // Phone ID is an identifier, not an access credential; keep a compatibility fallback
@@ -94,9 +107,11 @@ Deno.serve(async (req) => {
 
     // TEST ONLY: whitelisted phone — no WhatsApp message, no auth_otps row (use 123456 on verify).
     if (isDevOtpBypassPhone(phone)) {
+      const qa = getDevQaAccount(phone)!;
+      if (role && role !== qa.loginRole) return res({ error: "role_mismatch", effective: qa.loginRole }, 403);
       const { data: dbUser } = await d.from("users").select("id, name, role, college_id").eq("phone_number", phone).maybeSingle();
-      const user = devMasterUser(phone, dbUser);
-      console.log(`DEV OTP bypass send (no WhatsApp) ${phone.slice(0, 6)}****`);
+      const user = devQaUser(phone, dbUser);
+      console.log(`DEV OTP bypass send (no WhatsApp) ${phone.slice(0, 6)}**** ${qa.loginRole}`);
       return res({ sent: true, name: user.name, dev_bypass: true });
     }
 
@@ -166,21 +181,25 @@ Deno.serve(async (req) => {
     const otp = (body.otp ?? "").toString().trim();
     if (!otp || !/^\d{6}$/.test(otp)) return res({ error: "Invalid OTP format" }, 400);
 
-    // TEST ONLY: whitelisted phone + fixed OTP → master admin session (skips auth_otps + WhatsApp).
+    // TEST ONLY: whitelisted phone + fixed OTP (skips auth_otps + WhatsApp).
     if (isDevOtpBypassPhone(phone)) {
-      if (otp !== DEV_OTP_BYPASS_CODE) {
+      if (otp !== DEV_QA_OTP) {
         return res({ valid: false, error: "invalid_or_expired" }, 401);
       }
       if (!SESSION_SIGNING_SECRET) return res({ valid: false, error: "configuration_error" }, 503);
+      const qa = getDevQaAccount(phone)!;
       const { data: dbUser } = await d.from("users").select("*").eq("phone_number", phone).maybeSingle();
-      const user = devMasterUser(phone, dbUser);
+      const user = devQaUser(phone, dbUser);
+      const loginRole = effectiveLoginRole(user as { college_id?: string | null; role?: string }) === "admin" && qa.loginRole === "master"
+        ? "master"
+        : qa.loginRole;
       const session_token = await signSession({
         sub: user.id,
-        role: "master",
+        role: loginRole,
         college_id: user.college_id ?? null,
         exp: Math.floor(Date.now() / 1000) + 8 * 60 * 60,
       }, SESSION_SIGNING_SECRET);
-      console.log(`DEV OTP bypass verify (master) ${phone.slice(0, 6)}****`);
+      console.log(`DEV OTP bypass verify (${loginRole}) ${phone.slice(0, 6)}****`);
       return res({ valid: true, user, session_token });
     }
 
