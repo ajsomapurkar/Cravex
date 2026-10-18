@@ -2,7 +2,8 @@
 
 **Spec pack:** [feature-spec-pack/CRAVEX_FEATURE_SPEC_PACK/README.md](feature-spec-pack/CRAVEX_FEATURE_SPEC_PACK/README.md)  
 **Role model (4 product roles):** [ROLE_MODEL_AND_PERMISSION_MATRIX.md](ROLE_MODEL_AND_PERMISSION_MATRIX.md)  
-**Last reviewed against repo:** 2026-10-11
+**Last reviewed against repo:** 2026-10-18  
+**Master functional spec:** [DASHBOARD_REDESIGN_AND_FUNCTIONAL_SPEC.md](DASHBOARD_REDESIGN_AND_FUNCTIONAL_SPEC.md)
 
 ### Gap vs four-role product model (dashboard today)
 
@@ -11,7 +12,7 @@
 | Login roles | `college_admin`, `principal`, `hod`, `teacher` only | **Master Admin** still on login + QA bypass; legacy `admin`/`master` in app logic |
 | Principal in DB | In `users_role_check` | Migration in repo; **not necessarily applied** on live Supabase |
 | Authorization | Server + RLS; UI not proof | Direct anon queries + client role picker (F01 open) |
-| Module UIs | Matrix-driven capabilities | F03/F04/F05 dark consoles shipped; **College Admin (F02) module not yet** |
+| Module UIs | Matrix-driven capabilities | **F02–F05** dark role consoles shipped (UI partial); timetable/meetings/RLS still open |
 | Student login | Out of scope | No student login UI (OK) |  
 **Legend:** ✅ Done (verified E2E) · 🟡 In repo / partial · 🔴 Not started · ⚠️ P0 blocker
 
