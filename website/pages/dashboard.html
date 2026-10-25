@@ -11,6 +11,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/">
   <title>Cravex — Dashboard</title>
   <script>if (/^admin\./i.test(location.hostname)) { document.documentElement.classList.add('admin-console-theme'); }</script>
   <link
@@ -1725,13 +1726,24 @@
       isMaster = (cu._role === 'master');
       saveSessionCache(user, sessionToken);
       if (_resendTimer) clearInterval(_resendTimer);
-      await initApp();
+      try {
+        await initApp();
+      } catch (e) {
+        console.error('initApp', e);
+        renderDashboardShell(cu._role || cu.role || 'teacher');
+        toast('Recovered dashboard after a load error — retry or reload if data is missing.', 'error');
+      }
     }
 
     async function restoreCachedLogin() {
       const cached = tryRestoreSessionCache();
       if (!cached) return;
-      await finishLoginSession(cached.user, cached.sessionToken);
+      try {
+        await finishLoginSession(cached.user, cached.sessionToken);
+      } catch (e) {
+        console.error('restoreCachedLogin', e);
+        clearSessionCache();
+      }
     }
     if (window.CVX_ADMIN_HOST) {
       document.addEventListener('DOMContentLoaded', () => {
@@ -1876,7 +1888,9 @@
           u._role = qa.loginRole;
           await finishLoginSession(u, '');
         } catch (e) {
-          err.textContent = '❌ Could not start session.';
+          console.error('QA login', e);
+          try { renderDashboardShell(qa.loginRole); } catch (_) { /* ignore */ }
+          err.textContent = cu ? '' : '❌ Could not start session.';
           btn.textContent = 'Verify & Login →';
           btn.disabled = false;
         }
@@ -1932,34 +1946,80 @@
     function doLogout() { if (window.CvxPrincipal) CvxPrincipal.clearTheme(); if (window.CvxHod) CvxHod.clearTheme(); if (window.CvxTeacher) CvxTeacher.clearTheme(); if (window.CvxCollegeAdmin) CvxCollegeAdmin.clearTheme(); clearSessionCache(); window._cvxSession = ''; cu = null; cid = null; isMaster = false; allColleges = []; document.getElementById('login-step1').style.display = 'block'; document.getElementById('login-step2').style.display = 'none'; document.getElementById('l-err').textContent = ''; document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app').style.display = 'none'; }
 
     // ── INIT ──────────────────────────────────────────────────────────────
-    async function initApp() {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      const name = cu.name || 'User';
-      document.getElementById('u-name').textContent = name;
-      document.getElementById('u-av').textContent = name[0].toUpperCase();
-      document.getElementById('u-role-tag').textContent = { master: 'Master Admin', college_admin: 'College Admin', principal: 'Principal', hod: 'HOD', teacher: 'Teacher' }[cu._role] || cu._role;
-      if (isMaster) { const { data } = await db.from('colleges').select('id,name').order('name'); allColleges = data || []; if (!cid && allColleges.length) cid = allColleges[0].id; }
-      else if (!cid) {
-        const { data: colleges } = await db.from('colleges').select('id,name').order('name').limit(1);
-        if (colleges && colleges.length) { cid = colleges[0].id; cu.college_id = cid; }
+    async function resolveCollegeScope() {
+      if (isMaster) {
+        const { data } = await db.from('colleges').select('id,name').order('name');
+        allColleges = data || [];
+        if (!cid && allColleges.length) cid = allColleges[0].id;
+        return;
       }
-      if (cu._role === 'principal' && window.CvxPrincipal) CvxPrincipal.applyTheme();
-      else if (cu._role === 'hod' && window.CvxHod) CvxHod.applyTheme();
-      else if (cu._role === 'teacher' && window.CvxTeacher) CvxTeacher.applyTheme();
-      else if (cu._role === 'college_admin' && window.CvxCollegeAdmin) CvxCollegeAdmin.applyTheme();
+      if (!cid) {
+        const { data: colleges } = await db.from('colleges').select('id,name').order('name').limit(1);
+        if (colleges && colleges.length) {
+          cid = colleges[0].id;
+          cu.college_id = cid;
+        }
+      }
+    }
+
+    function applyRoleTheme(role) {
+      if (role === 'principal' && window.CvxPrincipal) CvxPrincipal.applyTheme();
+      else if (role === 'hod' && window.CvxHod) CvxHod.applyTheme();
+      else if (role === 'teacher' && window.CvxTeacher) CvxTeacher.applyTheme();
+      else if (role === 'college_admin' && window.CvxCollegeAdmin) CvxCollegeAdmin.applyTheme();
       else {
         if (window.CvxPrincipal) CvxPrincipal.clearTheme();
         if (window.CvxHod) CvxHod.clearTheme();
         if (window.CvxTeacher) CvxTeacher.clearTheme();
         if (window.CvxCollegeAdmin) CvxCollegeAdmin.clearTheme();
       }
-      if (cu._role === 'hod' && window.CvxHod) await CvxHod.ensureDepartmentContext(db, cu, cid);
-      if (window.CvxWorkspace) CvxWorkspace.applyShell(cu._role);
-      buildNav(cu._role);
-      buildPages(cu._role);
+    }
+
+    function renderDashboardShell(role) {
+      const r = role || cu?._role || 'teacher';
+      if (window.CvxWorkspace) CvxWorkspace.applyShell(r);
+      buildNav(r);
+      try {
+        buildPages(r);
+      } catch (e) {
+        console.error('buildPages', e);
+        document.getElementById('main-content').innerHTML =
+          `<div class="card" style="padding:20px;margin:16px"><h3>Dashboard could not render</h3><p style="font-size:13px;color:var(--mid)">${esc(e.message || e)}</p><button class="btn-primary btn-sm" onclick="location.reload()">Reload</button></div>`;
+        return;
+      }
       if (window.CvxWorkspace) CvxWorkspace.bindMobileNav();
-      nav(cu._role === 'hod' ? 'mydept' : 'overview');
+      nav(r === 'hod' ? 'mydept' : 'overview');
+    }
+
+    async function initApp() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      const name = cu.name || 'User';
+      const role = cu._role || cu.role || 'teacher';
+      cu._role = role;
+      document.getElementById('u-name').textContent = name;
+      document.getElementById('u-av').textContent = name[0].toUpperCase();
+      document.getElementById('u-role-tag').textContent = { master: 'Master Admin', college_admin: 'College Admin', principal: 'Principal', hod: 'HOD', teacher: 'Teacher' }[role] || role;
+
+      try {
+        await Promise.race([
+          resolveCollegeScope(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('College lookup timed out')), 15000)),
+        ]);
+      } catch (e) {
+        console.warn('resolveCollegeScope', e);
+        toast('College data unavailable — dashboard loaded with limited data.', 'error');
+      }
+
+      applyRoleTheme(role);
+
+      try {
+        if (role === 'hod' && window.CvxHod) await CvxHod.ensureDepartmentContext(db, cu, cid);
+      } catch (e) {
+        console.warn('ensureDepartmentContext', e);
+      }
+
+      renderDashboardShell(role);
     }
 
     // ── NAV ───────────────────────────────────────────────────────────────
