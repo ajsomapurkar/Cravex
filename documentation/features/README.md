@@ -10,4 +10,4 @@ Product role specifications imported from the **`features.zip`** bundle (2026-10
 | [teacher.md](teacher.md) | Teacher / faculty |
 | [ROLE_MODEL_AND_PERMISSION_MATRIX.md](ROLE_MODEL_AND_PERMISSION_MATRIX.md) | Four-role permission model |
 
-Canonical copies used by the repo tracker also live under [../guides/](../guides/). UI wiring: `website/assets/js/{college-admin,principal,hod,teacher}/`.
+Canonical copies used by the repo tracker also live under [../guides/](../guides/). UI wiring: `website/assets/js/{college-admin,principal,hod,teacher}/`. Dashboard capability map: `website/assets/js/core/role-feature-catalog.js` (live · partial · planned).

@@ -19,7 +19,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="/assets/css/dashboard-ui.css?v=20261011f05">
-  <link rel="stylesheet" href="/assets/css/admin-dark-theme.css?v=20261011f05">
+  <link rel="stylesheet" href="/assets/css/admin-dark-theme.css?v=20261025">
   <link rel="stylesheet" href="/assets/css/principal-console.css?v=20261011f05">
   <link rel="stylesheet" href="/assets/css/hod-console.css?v=20261011f05">
   <link rel="stylesheet" href="/assets/css/teacher-console.css?v=20261011f05">
@@ -1622,12 +1622,13 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/assets/js/ui/workspace.js?v=20261011f05"></script>
+  <script src="/assets/js/ui/workspace.js?v=20261025"></script>
   <script src="/assets/js/admin/config-console.js?v=20261011f05"></script>
-  <script src="/assets/js/principal/principal-module.js?v=20261011f03b"></script>
-  <script src="/assets/js/hod/hod-module.js?v=20261011f04b"></script>
-  <script src="/assets/js/teacher/teacher-module.js?v=20261011f05b"></script>
-  <script src="/assets/js/college-admin/college-admin-module.js?v=20261011f02"></script>
+  <script src="/assets/js/core/role-feature-catalog.js?v=20261025"></script>
+  <script src="/assets/js/principal/principal-module.js?v=20261025"></script>
+  <script src="/assets/js/hod/hod-module.js?v=20261025"></script>
+  <script src="/assets/js/teacher/teacher-module.js?v=20261025"></script>
+  <script src="/assets/js/college-admin/college-admin-module.js?v=20261025"></script>
   <script>
     const SUPABASE_URL = 'https://gkuzoywsftjxnxzlufiy.supabase.co';
     window.SUPABASE_URL = SUPABASE_URL;
@@ -2045,11 +2046,16 @@
       <div class="card"><div class="card-hd"><h3>${isTea ? 'Attendance alerts' : 'Low attendance alerts'}</h3></div><div id="o-low">${ld()}</div></div>
     </div>
     <div class="card"><div class="card-hd"><h3>${isHod ? 'Department risk spotlight' : 'Top risk students'}</h3><a href="#" onclick="nav('risk');return false" style="font-size:12px;color:var(--mid);text-decoration:none">View all →</a></div><div id="o-risk-prev">${ld()}</div></div>
+    ${isCollegeAdmin || isPrincipal || isHod || isTea ? '<div id="role-spec-panel"></div>' : ''}
   </div>
 
   ${isCollegeAdmin ? `<div class="page" id="p-readiness">
     <div class="page-hd"><div><h2>Setup readiness</h2><p>Complete institution setup before academic go-live.</p></div></div>
     <div id="readiness-wrap">${ld()}</div>
+  </div>
+  <div class="page" id="p-imports">
+    <div class="page-hd"><div><h2>Bulk import</h2><p>Validated roster imports (preview before commit).</p></div></div>
+    <div id="imports-wrap">${ld()}</div>
   </div>` : ''}
 
   ${isTea ? `<div class="page" id="p-myclasses">
@@ -2148,6 +2154,10 @@
     <div class="page-hd"><div><h2>Approval queue</h2><p>Review evidence packs, resources, and items returned from HOD verification.</p></div></div>
     <div class="card"><div id="approvals-wrap">${ld()}</div></div>
   </div>
+  <div class="page" id="p-principaltimetable">
+    <div class="page-hd"><div><h2>Timetable review</h2><p>Institution-wide schedule oversight and policy approvals.</p></div></div>
+    <div id="principal-timetable-wrap">${ld()}</div>
+  </div>
   <div class="page" id="p-meetings">
     <div class="page-hd"><div><h2>Meetings & minutes</h2><p>Academic council, IQAC, and department reviews with action tracking.</p></div></div>
     <div id="meetings-wrap">${ld()}</div>
@@ -2166,6 +2176,14 @@
   <div class="page" id="p-hodreviews">
     <div class="page-hd"><div><h2>Review queue</h2><p>Approve or return course files and teaching evidence from your department faculty.</p></div></div>
     <div class="card"><div id="hod-reviews-wrap">${ld()}</div></div>
+  </div>
+  <div class="page" id="p-hodallocation">
+    <div class="page-hd"><div><h2>Faculty allocation</h2><p>Theory, tutorial, lab and batch assignments in your department.</p></div></div>
+    <div id="hod-allocation-wrap">${ld()}</div>
+  </div>
+  <div class="page" id="p-hoddttimetable">
+    <div class="page-hd"><div><h2>Department timetable</h2><p>Draft, validate clashes, publish to faculty.</p></div></div>
+    <div id="hod-timetable-wrap">${ld()}</div>
   </div>
   <div class="page" id="p-hodmeetings">
     <div class="page-hd"><div><h2>Department meetings</h2><p>Faculty meetings, syllabus reviews, and action tracking.</p></div></div>
@@ -2263,7 +2281,7 @@
     }
 
     // ── NAVIGATION ────────────────────────────────────────────────────────
-    const loaders = { overview: loadOverview, students: loadStudents, teachers: loadTeachers, departments: loadDepartments, mydept: loadHodDept, colleges: loadColleges, risk: loadRisk, marks: loadMarks, sessions: loadSessions, broadcast: loadBroadcast, notices: loadNotices, knowledge: loadKnowledge, analytics: loadAnalytics, lessonplan: loadLessonPlan, settings: loadSettings, approvals: loadPrincipalApprovals, meetings: loadPrincipalMeetings, hodreviews: loadHodReviews, hodmeetings: loadHodMeetings, myclasses: loadTeacherMyClasses, submissions: loadTeacherSubmissions, readiness: loadCollegeReadiness };
+    const loaders = { overview: loadOverview, students: loadStudents, teachers: loadTeachers, departments: loadDepartments, mydept: loadHodDept, colleges: loadColleges, risk: loadRisk, marks: loadMarks, sessions: loadSessions, broadcast: loadBroadcast, notices: loadNotices, knowledge: loadKnowledge, analytics: loadAnalytics, lessonplan: loadLessonPlan, settings: loadSettings, approvals: loadPrincipalApprovals, meetings: loadPrincipalMeetings, principaltimetable: loadPrincipalTimetable, hodreviews: loadHodReviews, hodmeetings: loadHodMeetings, hodallocation: loadHodAllocation, hoddttimetable: loadHodTimetable, myclasses: loadTeacherMyClasses, submissions: loadTeacherSubmissions, readiness: loadCollegeReadiness, imports: loadCollegeImports };
     function loadPrincipalApprovals() { if (window.CvxPrincipal) CvxPrincipal.loadApprovals(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
     function loadPrincipalMeetings() { if (window.CvxPrincipal) CvxPrincipal.loadMeetings(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
     function loadHodReviews() { if (window.CvxHod) CvxHod.loadReviewQueue(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
@@ -2271,6 +2289,17 @@
     function loadTeacherMyClasses() { if (window.CvxTeacher) CvxTeacher.loadMyClasses(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
     function loadTeacherSubmissions() { if (window.CvxTeacher) CvxTeacher.loadSubmissions(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
     function loadCollegeReadiness() { if (window.CvxCollegeAdmin) CvxCollegeAdmin.loadReadinessPage(db, cid, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadCollegeImports() { if (window.CvxCollegeAdmin) CvxCollegeAdmin.loadImportsPage(db, cid, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadPrincipalTimetable() { if (window.CvxPrincipal) CvxPrincipal.loadTimetableOversight(db, cid, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadHodTimetable() { if (window.CvxHod) CvxHod.loadTimetablePage(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadHodAllocation() { if (window.CvxHod) CvxHod.loadAllocationPage(db, cid, cu, { esc, fmt, fmtFull, toast, empty, ld }); }
+    function loadRoleSpecPanels() {
+      const h = { esc, fmt, fmtFull, toast, empty, ld };
+      if (cu._role === 'college_admin' && window.CvxCollegeAdmin) CvxCollegeAdmin.loadSpecPanel(h);
+      if (cu._role === 'principal' && window.CvxPrincipal) CvxPrincipal.loadSpecPanel(h);
+      if (cu._role === 'hod' && window.CvxHod) CvxHod.loadSpecPanel(h);
+      if (cu._role === 'teacher' && window.CvxTeacher) CvxTeacher.loadSpecPanel(h);
+    }
     async function loadSettings() {
       if (!cid) { const { data: fc } = await db.from('colleges').select('id').order('name').limit(1).maybeSingle(); if (fc) cid = fc.id; }
       if (!cid) { document.getElementById('settings-wrap').innerHTML = empty('', 'No college selected'); return; }
@@ -2283,7 +2312,7 @@
       const ni = document.getElementById('n-' + name);
       if (pg) pg.classList.add('active');
       if (ni) ni.classList.add('active');
-      const titles = { overview: 'Dashboard', students: 'Students', teachers: 'Teachers', departments: 'Departments', mydept: 'My Department', colleges: 'Colleges', lessonplan: 'Lesson Plan', marks: 'Marks', risk: 'Risk Monitor', sessions: 'Sessions', broadcast: 'Broadcast', notices: 'Notices', knowledge: 'Knowledge Base', analytics: 'Analytics', settings: 'Settings', approvals: 'Approval queue', meetings: 'Meetings', hodreviews: 'Review queue', hodmeetings: 'Dept meetings', myclasses: 'My classes', submissions: 'Submissions', readiness: 'Setup readiness' };
+      const titles = { overview: 'Dashboard', students: 'Students', teachers: 'Teachers', departments: 'Departments', mydept: 'My Department', colleges: 'Colleges', lessonplan: 'Lesson Plan', marks: 'Marks', risk: 'Risk Monitor', sessions: 'Sessions', broadcast: 'Broadcast', notices: 'Notices', knowledge: 'Knowledge Base', analytics: 'Analytics', settings: 'Settings', approvals: 'Approval queue', meetings: 'Meetings', principaltimetable: 'Timetable review', hodreviews: 'Review queue', hodmeetings: 'Dept meetings', hodallocation: 'Allocations', hoddttimetable: 'Timetable', myclasses: 'My classes', submissions: 'Submissions', readiness: 'Setup readiness', imports: 'Bulk import' };
       const mt = document.getElementById('mobile-page-title');
       if (mt) mt.textContent = titles[name] || 'Cravex';
       if (loaders[name]) loaders[name]();
@@ -2312,6 +2341,7 @@
       if (cu._role === 'hod' && window.CvxHod) CvxHod.loadDeptKpis(db, cid, cu);
       if (cu._role === 'teacher' && window.CvxTeacher) CvxTeacher.loadTeachingKpis(db, cid, cu);
       if (cu._role === 'college_admin' && window.CvxCollegeAdmin) CvxCollegeAdmin.loadSetupKpis(db, cid);
+      loadRoleSpecPanels();
     }
 
     // ── STUDENTS ──────────────────────────────────────────────────────────

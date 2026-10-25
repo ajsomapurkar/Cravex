@@ -1,7 +1,13 @@
 /**
  * F05 — Teacher dashboard & faculty workspace (assignment-scoped UI).
+ * Product spec: documentation/features/teacher.md
  */
 (function (global) {
+  function loadSpecPanel(helpers) {
+    const el = document.getElementById('role-spec-panel');
+    if (!el || !global.CvxRoleFeatures) return;
+    el.innerHTML = global.CvxRoleFeatures.render('teacher', helpers);
+  }
   const SUBMIT_LS = 'cvx_teacher_submissions_v1_';
 
   function submitKey(phone) {
@@ -94,16 +100,21 @@
       .map((a) => {
         const sub = a.subjects?.name || 'Subject';
         const code = a.subjects?.code ? ` (${a.subjects.code})` : '';
-        const sec = [a.branch, `Sem ${a.semester}`, a.division ? `Div ${a.division}` : '', a.component, a.batch].filter(Boolean).join(' · ');
+        const comp = a.component || 'theory';
+        const compLbl = comp === 'lab' || comp === 'laboratory' ? 'Laboratory' : comp === 'practical' ? 'Practical' : comp === 'tutorial' ? 'Tutorial' : 'Theory';
+        const sec = [a.branch, `Sem ${a.semester}`, a.division ? `Div ${a.division}` : '', compLbl, a.batch ? `Batch ${a.batch}` : ''].filter(Boolean).join(' · ');
+        const marksHint = comp === 'lab' || comp === 'practical' ? 'Lab marks' : 'Theory / IA marks';
         return `<div class="class-card">
           <div>
             <div style="font-weight:500">${helpers.esc(sub)}${helpers.esc(code)}</div>
             <div class="approval-meta">${helpers.esc(sec)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Assignment-scoped · ${helpers.esc(marksHint)}</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn-sm" onclick="nav('students')">Roster</button>
+            <button class="btn-sm" onclick="nav('sessions')">Attendance</button>
             <button class="btn-sm" onclick="nav('lessonplan')">Lesson plan</button>
-            <button class="btn-sm" onclick="nav('marks')">Marks</button>
+            <button class="btn-sm" onclick="nav('marks')">${comp === 'lab' || comp === 'practical' ? 'Lab marks' : 'Marks'}</button>
           </div>
         </div>`;
       })
@@ -238,6 +249,7 @@
     loadTeachingKpis,
     loadMyClasses,
     loadSubmissions,
+    loadSpecPanel,
     submitMarksDraft,
     submitLessonPlanDraft,
     resubmitLocal,

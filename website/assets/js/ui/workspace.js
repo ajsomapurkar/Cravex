@@ -132,6 +132,7 @@
         navItem('departments', 'Departments', '▦') +
         navItem('teachers', 'Teachers', '◎') +
         navItem('students', 'Students', '◉') +
+        navItem('imports', 'Bulk import', '↥') +
         navItem('sessions', 'Sessions', '◷') +
         navItem('settings', 'Settings', '⚙') +
         navSection('Academics') +
@@ -150,6 +151,7 @@
         navItem('approvals', 'Approval queue', '✓') +
         navItem('departments', 'HOD & departments', '▦') +
         navItem('meetings', 'Meetings', '◷') +
+        navItem('principaltimetable', 'Timetable review', '◷') +
         navSection('Institution') +
         navItem('students', 'Students', '◉') +
         navItem('teachers', 'Teachers', '◎') +
@@ -166,6 +168,8 @@
         navItem('mydept', 'My department', '▦') +
         navItem('hodreviews', 'Review queue', '✓') +
         navItem('hodmeetings', 'Dept meetings', '◷') +
+        navItem('hodallocation', 'Allocations', '◎') +
+        navItem('hoddttimetable', 'Timetable', '◷') +
         navSection('Academics') +
         navItem('lessonplan', 'Lesson plans', '▤') +
         navItem('marks', 'Marks review', '◇') +

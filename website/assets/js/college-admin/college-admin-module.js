@@ -1,7 +1,13 @@
 /**
  * F02 — College Admin institution setup & readiness (UI layer, single-college scope).
+ * Product spec: documentation/features/college-admin.md
  */
 (function (global) {
+  function loadSpecPanel(helpers) {
+    const el = document.getElementById('role-spec-panel');
+    if (!el || !global.CvxRoleFeatures) return;
+    el.innerHTML = global.CvxRoleFeatures.render('college_admin', helpers);
+  }
   function applyTheme() {
     document.documentElement.classList.remove('principal-console-theme', 'hod-console-theme', 'teacher-console-theme');
     document.documentElement.classList.add('college-admin-console-theme');
@@ -34,13 +40,14 @@
   }
 
   async function runReadinessChecks(db, collegeId) {
-    const [{ data: college }, { data: depts }, { count: teacherCount }, { count: studentCount }, { count: assignCount }] =
+    const [{ data: college }, { data: depts }, { count: teacherCount }, { count: studentCount }, { count: assignCount }, { count: subjectCount }] =
       await Promise.all([
         db.from('colleges').select('id,name').eq('id', collegeId).maybeSingle(),
         db.from('departments').select('id,hod_user_id').eq('college_id', collegeId).eq('is_active', true),
         db.from('users').select('id', { count: 'exact', head: true }).eq('college_id', collegeId).eq('role', 'teacher').is('deleted_at', null),
         db.from('students').select('id', { count: 'exact', head: true }).eq('college_id', collegeId).is('deleted_at', null),
         db.from('subject_assignments').select('id', { count: 'exact', head: true }).eq('college_id', collegeId).eq('is_active', true),
+        db.from('subjects').select('id', { count: 'exact', head: true }).eq('college_id', collegeId),
       ]);
     const deptList = depts || [];
     const noHod = deptList.filter((d) => !d.hod_user_id).length;
@@ -51,7 +58,23 @@
       { id: 'teachers', label: 'Faculty accounts', ok: (teacherCount ?? 0) > 0, hint: `${teacherCount ?? 0} teachers`, nav: 'teachers' },
       { id: 'assign', label: 'Subject assignments', ok: (assignCount ?? 0) > 0, hint: `${assignCount ?? 0} active`, nav: 'teachers' },
       { id: 'students', label: 'Student roster', ok: (studentCount ?? 0) > 0, hint: `${studentCount ?? 0} students`, nav: 'students' },
+      { id: 'subjects', label: 'Subject catalogue', ok: (subjectCount ?? 0) > 0, hint: `${subjectCount ?? 0} subjects`, nav: 'departments' },
     ];
+  }
+
+  async function loadImportsPage(db, collegeId, helpers) {
+    const wrap = document.getElementById('imports-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = `<div class="card"><div class="card-hd"><h3>Bulk import (planned)</h3></div>
+      <div style="padding:16px;font-size:13px;color:var(--mid);line-height:1.55">
+        <p>Per <strong>college-admin.md</strong>: student and roster imports will use a server-side preview step (duplicates & invalid rows) before commit — not partial browser inserts.</p>
+        <ul style="margin:12px 0 0 18px;font-size:12px">
+          <li>CSV/XLSX templates from <code>templates/</code></li>
+          <li>Staging table or validated transaction (F02 / F20)</li>
+          <li>Audit trail on successful import batches</li>
+        </ul>
+        <button class="btn-sm" style="margin-top:14px" onclick="nav('students')">Manage students manually →</button>
+      </div></div>`;
   }
 
   async function loadReadinessPage(db, collegeId, helpers) {
@@ -84,7 +107,10 @@
         College Admin manages setup and users for <strong>this college only</strong>. You do not approve final IA marks unless policy assigns that duty to you.
         Principal assigns HODs; HOD verifies department submissions; teachers work on assigned classes.
       </div>
-    </div>`;
+    </div>
+    <div id="readiness-spec-slot"></div>`;
+    const slot = document.getElementById('readiness-spec-slot');
+    if (slot && global.CvxRoleFeatures) slot.innerHTML = global.CvxRoleFeatures.render('college_admin', helpers);
   }
 
   global.CvxCollegeAdmin = {
@@ -92,5 +118,7 @@
     clearTheme,
     loadSetupKpis,
     loadReadinessPage,
+    loadSpecPanel,
+    loadImportsPage,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

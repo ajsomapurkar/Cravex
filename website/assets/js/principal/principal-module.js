@@ -1,8 +1,13 @@
 /**
  * F03 — Principal dashboard & institutional governance (UI layer).
- * Requires college scope (cid), Supabase client (db), and dashboard helpers (esc, fmt, fmtFull, toast, empty, ld).
+ * Product spec: documentation/features/principal.md
  */
 (function (global) {
+  function loadSpecPanel(helpers) {
+    const el = document.getElementById('role-spec-panel');
+    if (!el || !global.CvxRoleFeatures) return;
+    el.innerHTML = global.CvxRoleFeatures.render('principal', helpers);
+  }
   const MEETINGS_LS_PREFIX = 'cvx_principal_meetings_v1_';
 
   function meetingsStorageKey(collegeId) {
@@ -305,6 +310,21 @@
     loadMeetings(ctx.db, ctx.collegeId, ctx.cu, ctx.helpers);
   }
 
+  async function loadTimetableOversight(db, collegeId, helpers) {
+    const wrap = document.getElementById('principal-timetable-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = `<div class="card"><div class="card-hd"><h3>Institution timetable (F06)</h3></div>
+      <div style="padding:16px;font-size:13px;color:var(--mid);line-height:1.55">
+        <p>Principal reviews published timetable revisions when institutional policy requires approval; otherwise maintains read-only oversight.</p>
+        <ol style="margin:10px 0 0 18px;font-size:12px">
+          <li>HOD drafts department schedule & clash validation</li>
+          <li>Optional Principal approval step</li>
+          <li>Publish version → notify affected faculty & sections</li>
+        </ol>
+        <p style="margin-top:12px;font-size:12px">Versioned timetable tables and Realtime propagation are not yet in the live schema.</p>
+      </div></div>`;
+  }
+
   global.CvxPrincipal = {
     applyTheme,
     clearTheme,
@@ -313,5 +333,7 @@
     decideApproval,
     loadMeetings,
     createMeeting,
+    loadSpecPanel,
+    loadTimetableOversight,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

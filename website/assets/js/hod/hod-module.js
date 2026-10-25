@@ -1,7 +1,13 @@
 /**
  * F04 — HOD department operations (UI layer, department-scoped).
+ * Product spec: documentation/features/hod.md
  */
 (function (global) {
+  function loadSpecPanel(helpers) {
+    const el = document.getElementById('role-spec-panel');
+    if (!el || !global.CvxRoleFeatures) return;
+    el.innerHTML = global.CvxRoleFeatures.render('hod', helpers);
+  }
   const MEETINGS_LS_PREFIX = 'cvx_hod_meetings_v1_';
 
   function applyTheme() {
@@ -124,11 +130,12 @@
       );
     }
     wrap._hodCtx = { db, collegeId, cu, helpers, dept };
+    const queueIntro = `<div style="padding:12px 16px 0;font-size:12px;color:var(--mid)">Review course files today; lesson plans, IA marks and question papers follow the same approve / return / escalate flow per <strong>hod.md</strong>.</div>`;
     if (!items.length) {
-      wrap.innerHTML = helpers.empty('◇', 'Queue clear', 'Lesson plans, course files and marks returned for review will appear here.');
+      wrap.innerHTML = queueIntro + helpers.empty('◇', 'Queue clear', 'Pending resources, lesson plans and marks submissions will appear here.');
       return;
     }
-    wrap.innerHTML = items
+    wrap.innerHTML = queueIntro + items
       .map(
         (it) => `
       <div class="approval-row" id="hod-review-${it.type}-${it.id}">
@@ -243,6 +250,47 @@
     loadDeptMeetings(ctx.db, ctx.collegeId, ctx.cu, ctx.helpers);
   }
 
+  async function loadTimetablePage(db, collegeId, cu, helpers) {
+    const wrap = document.getElementById('hod-timetable-wrap');
+    if (!wrap) return;
+    const dept = await getDept(db, collegeId, cu.department_id);
+    const deptLabel = dept ? `${dept.name} (${dept.code})` : 'your department';
+    wrap.innerHTML = `<div class="card"><div class="card-hd"><h3>Department timetable</h3><span style="font-size:11px;color:var(--mid)">${helpers.esc(deptLabel)}</span></div>
+      <div style="padding:16px;font-size:13px;color:var(--mid);line-height:1.55">
+        <p>Draft slots for faculty, sections, labs and rooms; validate clashes; publish version to assigned teachers (F06).</p>
+        <p style="margin-top:10px;font-size:12px">Assignment-aware permissions: lab instructors retain marks/attendance for their batch even when holding HOD review rights elsewhere.</p>
+        <button class="btn-sm" style="margin-top:12px" onclick="nav('mydept')">View faculty allocation →</button>
+      </div></div>`;
+  }
+
+  async function loadAllocationPage(db, collegeId, cu, helpers) {
+    const wrap = document.getElementById('hod-allocation-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = helpers.ld();
+    await loadReviewQueue(db, collegeId, cu, helpers);
+    const dept = await getDept(db, collegeId, cu.department_id);
+    if (!dept) {
+      wrap.innerHTML = helpers.empty('', 'No department assigned');
+      return;
+    }
+    const { data: assigns } = await db
+      .from('subject_assignments')
+      .select('branch,semester,division,component,batch,teacher_phone,subjects(name,code)')
+      .eq('college_id', collegeId)
+      .eq('is_active', true);
+    const scoped = (assigns || []).filter((a) => !dept.code || a.branch === dept.code || a.branch === 'All');
+    wrap.innerHTML = `<div class="card"><div class="card-hd"><h3>Subject & component allocation</h3></div>
+      ${!scoped.length ? helpers.empty('▦', 'No assignments in department scope') : scoped
+          .slice(0, 40)
+          .map((a) => {
+            const sub = a.subjects?.name || 'Subject';
+            const meta = [a.branch, `Sem ${a.semester}`, a.division, a.component, a.batch, a.teacher_phone].filter(Boolean).join(' · ');
+            return `<div class="class-card"><div><div style="font-weight:500">${helpers.esc(sub)}</div><div class="approval-meta">${helpers.esc(meta)}</div></div></div>`;
+          })
+          .join('')}
+      <div style="padding:12px 16px;font-size:11px;color:var(--muted)">Edits require College Admin or authorized HOD provisioning API (F02).</div></div>`;
+  }
+
   global.CvxHod = {
     applyTheme,
     clearTheme,
@@ -252,5 +300,8 @@
     decideReview,
     loadDeptMeetings,
     createDeptMeeting,
+    loadSpecPanel,
+    loadTimetablePage,
+    loadAllocationPage,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
