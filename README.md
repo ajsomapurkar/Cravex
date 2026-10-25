@@ -11,6 +11,7 @@ This package restores the dashboard's existing Supabase connection from `Cravex_
 - **Feature roadmap (F01–F21):** [CRAVEX Feature Spec Pack](documentation/feature-spec-pack/CRAVEX_FEATURE_SPEC_PACK/README.md) and [implementation tracker](documentation/FEATURE_IMPLEMENTATION_TRACKER.md).
 - **Four college roles & permissions:** [Role model and permission matrix](documentation/ROLE_MODEL_AND_PERMISSION_MATRIX.md).
 - **Dashboard redesign & functional spec:** [Detailed change specification](documentation/DASHBOARD_REDESIGN_AND_FUNCTIONAL_SPEC.md).
+- **Role feature guides (zip bundle):** [documentation/features/](documentation/features/).
 - `netlify.toml` — tells a Git-connected Netlify site to publish only `website/`.
 
 ## Connection status
