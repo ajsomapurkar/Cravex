@@ -1753,7 +1753,7 @@
           buildPages(role);
           if (typeof nav === 'function') nav(role === 'hod' ? 'mydept' : 'overview');
         }
-      }, 2500);
+      }, 800);
     }
 
     async function restoreCachedLogin() {
@@ -2012,6 +2012,30 @@
       nav(r === 'hod' ? 'mydept' : 'overview');
     }
 
+    function reloadActiveDashboardPage() {
+      const activeNav = document.querySelector('.sb-nav .nav-item.active');
+      const pageId = activeNav?.id?.replace(/^n-/, '');
+      if (pageId && typeof loaders !== 'undefined' && loaders[pageId]) loaders[pageId]();
+      else if (typeof loaders !== 'undefined' && loaders.overview) loaders.overview();
+    }
+
+    async function loadCollegeScopeInBackground(role) {
+      try {
+        await Promise.race([
+          resolveCollegeScope(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('College lookup timed out')), 15000)),
+        ]);
+      } catch (e) {
+        console.warn('resolveCollegeScope', e);
+      }
+      try {
+        if (role === 'hod' && window.CvxHod) await CvxHod.ensureDepartmentContext(db, cu, cid);
+      } catch (e) {
+        console.warn('ensureDepartmentContext', e);
+      }
+      reloadActiveDashboardPage();
+    }
+
     async function initApp() {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
@@ -2022,25 +2046,9 @@
       document.getElementById('u-av').textContent = name[0].toUpperCase();
       document.getElementById('u-role-tag').textContent = { master: 'Master Admin', college_admin: 'College Admin', principal: 'Principal', hod: 'HOD', teacher: 'Teacher' }[role] || role;
 
-      try {
-        await Promise.race([
-          resolveCollegeScope(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('College lookup timed out')), 15000)),
-        ]);
-      } catch (e) {
-        console.warn('resolveCollegeScope', e);
-        toast('College data unavailable — dashboard loaded with limited data.', 'error');
-      }
-
       applyRoleTheme(role);
-
-      try {
-        if (role === 'hod' && window.CvxHod) await CvxHod.ensureDepartmentContext(db, cu, cid);
-      } catch (e) {
-        console.warn('ensureDepartmentContext', e);
-      }
-
       renderDashboardShell(role);
+      void loadCollegeScopeInBackground(role);
     }
 
     // ── NAV ───────────────────────────────────────────────────────────────
