@@ -1733,6 +1733,27 @@
         renderDashboardShell(cu._role || cu.role || 'teacher');
         toast('Recovered dashboard after a load error — retry or reload if data is missing.', 'error');
       }
+      scheduleBlankShellRecovery();
+    }
+
+    function scheduleBlankShellRecovery() {
+      window.clearTimeout(window._cvxBlankRecoverTimer);
+      window._cvxBlankRecoverTimer = window.setTimeout(() => {
+        const app = document.getElementById('app');
+        if (!app || app.style.display === 'none') return;
+        const navEl = document.getElementById('sb-nav');
+        const navEmpty = !navEl || navEl.innerHTML.replace(/\s/g, '').length < 40;
+        const pagesMissing = !document.querySelector('.page');
+        if (!navEmpty && !pagesMissing) return;
+        const role = (window.cu && (window.cu._role || window.cu.role)) || 'teacher';
+        console.warn('CVX: recovering blank dashboard shell');
+        if (typeof renderDashboardShell === 'function') renderDashboardShell(role);
+        else if (typeof buildNav === 'function' && typeof buildPages === 'function') {
+          buildNav(role);
+          buildPages(role);
+          if (typeof nav === 'function') nav(role === 'hod' ? 'mydept' : 'overview');
+        }
+      }, 2500);
     }
 
     async function restoreCachedLogin() {
@@ -4246,38 +4267,42 @@ Plain text only in your reply. No markdown. Short paragraphs, bullets only for s
     function hideTyping() { document.getElementById('dxTyping')?.remove(); }
     function setStatus(t) { if(statusEl) statusEl.textContent = t; }
 
+    function localSupportReply(text) {
+      const q = text.toLowerCase();
+      const ctx = getContext();
+      if (/attendance|present|absent/.test(q)) {
+        return 'Open Sessions (or Attendance) in the sidebar, pick your class and date, then save. Past sessions can be corrected only through your college\'s allowed correction flow.';
+      }
+      if (/mark|ia1|ia2|assignment|see/.test(q)) {
+        return 'Go to Marks in the sidebar, choose your subject and division, enter values, then save. Submitted marks follow your HOD review workflow.';
+      }
+      if (/bulk|upload|excel|csv|student/.test(q)) {
+        return 'For roster upload: Students → download template → upload Excel/CSV. Teachers need an assigned subject before registering students for a class.';
+      }
+      if (/otp|login|whatsapp|code/.test(q)) {
+        return 'Use the WhatsApp number on file and the 6-digit OTP. If it does not arrive, wait and resend, or contact hello@cravex.co.in with your registered number.';
+      }
+      if (/blank|empty|not loading|white screen/.test(q)) {
+        return 'Try a hard refresh (Ctrl+Shift+R). If the sidebar is empty after login, sign out and sign in again. Ensure you selected the correct role tile before OTP.';
+      }
+      if (/parent|alert|broadcast/.test(q)) {
+        return 'Broadcast and notices are under Communication in the sidebar. Parent alerts depend on attendance/marks rules configured for your college.';
+      }
+      return `Thanks ${ctx.name}. I can help with attendance, marks, students, OTP, and navigation. For account or billing issues, use Email or WhatsApp below.`;
+    }
+
     async function sendMsg() {
       const text = inputEl.value.trim();
       if (!text || isLoading) return;
       inputEl.value = ''; isLoading = true; sendBtn.disabled = true;
       if (chipsEl) chipsEl.style.display = 'none';
       addMsg(text, 'user');
-      history.push({ role: 'user', content: text });
       showTyping(); setStatus('● Thinking…');
-      try {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 600,
-            system: buildSystem(),  // rebuilt each time to capture current page
-            messages: history
-          })
-        });
-        const data = await res.json();
-        hideTyping();
-        let reply = data.content?.find(b => b.type==='text')?.text
-          || 'Something went wrong. Please email hello@cravex.co.in.';
-        const shouldEscalate = reply.includes('[ESCALATE]');
-        reply = reply.replace('[ESCALATE]', '').trim();
-        if (reply) addMsg(reply, 'assistant');
-        if (shouldEscalate) addEscalateCard();
-        history.push({ role:'assistant', content:[{ type:'text', text: reply }] });
-      } catch(err) {
-        hideTyping();
-        addEscalateCard();
-      }
+      await new Promise(r => setTimeout(r, 400));
+      hideTyping();
+      const reply = localSupportReply(text);
+      addMsg(reply, 'assistant');
+      if (/support|human|call|billing|delete|frustrated/.test(text.toLowerCase())) addEscalateCard();
       setStatus('● Ready to help'); isLoading = false; sendBtn.disabled = false; inputEl.focus();
     }
 
